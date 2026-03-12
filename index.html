@@ -2019,7 +2019,7 @@ function cancelPicker(){
 }
 
 /* ── CHAT ── */
-const MASTER_GREETINGS=['안녕하세요. 저는 마담 로제입니다. 오늘 어떤 이야기를 나누고 싶으신가요?','어서 오세요. 카드는 이미 당신을 기다리고 있었습니다. 무엇이 마음을 무겁게 하고 있나요?','고요히 앉아 오셨군요. 오늘의 에너지가 당신을 이곳으로 이끌었습니다.'];
+const MASTER_GREETINGS=['안녕하세요. 저는 마담 로제입니다. 오늘 어떤 이야기를 나누고 싶으신가요?','어서 오세요. 카드는 이미 당신을 기다리고 있었습니다. 무엇이 마음을 무겁게 하고 있나요?','반갑습니다. 오늘의 에너지가 당신을 이곳으로 이끌었습니다.'];
 const MASTER_RESPONSES={
   draw:['카드를 선택해볼까요? 마음을 비우고 준비되면 버튼을 눌러주세요.','좋습니다. 이제 카드가 당신에게 말을 걸 것입니다.','카드의 에너지가 당신을 기다립니다.'],
   reveal:(card,isRev)=>{
@@ -2177,7 +2177,7 @@ function buildReading(){
 
     if(isAuto){
       // 로제의 선택 슬롯: 탭하면 랜덤 즉시 선택 + 플립
-      back.innerHTML='로제의<br>선택 받기';
+      back.innerHTML='운명 카드<br>받기';
       back.onclick=(()=>{const idx=i;return()=>pickAutoCard(idx);})();
     } else {
       back.innerHTML='탭하여<br>카드 받기';
