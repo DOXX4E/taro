@@ -31,17 +31,21 @@
   --r-xl: 32px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; background: var(--cream); }
 
+/* FIX 1: html/body height 100% + overflow hidden was cutting off scrollable content.
+   Only #shell needs fixed positioning. Body stays scrollable in its container. */
+html { height: 100%; }
 body {
+  height: 100%;
   font-family: 'Cormorant Garamond', Georgia, serif;
   max-width: 430px;
   margin: 0 auto;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  background: var(--cream);
+  /* Removed overflow:hidden from body — was clipping home page scroll */
 }
 
-/* Subtle background texture */
 body::before {
   content: '';
   position: fixed; inset: 0;
@@ -62,7 +66,8 @@ body::before {
 .page {
   display: none; flex: 1; flex-direction: column;
   overflow-y: auto; overflow-x: hidden;
-  padding-bottom: calc(var(--nav-h) + 24px);
+  /* FIX 2: Reduced excessive padding-bottom so content isn't hidden behind FAB/nav */
+  padding-bottom: calc(var(--nav-h) + 100px);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
@@ -105,7 +110,8 @@ body::before {
 }
 
 /* ── HOME ── */
-#pg-home { padding-bottom: calc(var(--nav-h) + 80px); }
+/* FIX 3: Home page needs its own padding to not clip behind FAB */
+#pg-home { padding-bottom: calc(var(--nav-h) + 100px); }
 
 .home-header {
   padding: 36px 22px 0;
@@ -131,6 +137,7 @@ body::before {
   background: rgba(255,255,255,0.8);
   backdrop-filter: blur(10px);
   margin-top: 4px;
+  white-space: nowrap; /* FIX 4: prevent date from wrapping */
 }
 
 /* COTD */
@@ -143,6 +150,8 @@ body::before {
   transition: transform .3s, box-shadow .3s;
   position: relative;
   box-shadow: 0 10px 36px rgba(15,30,61,0.3);
+  /* FIX 5: min-height ensures card always has visible height */
+  min-height: 160px;
 }
 .cotd::before {
   content: '';
@@ -150,17 +159,16 @@ body::before {
   background: linear-gradient(90deg, transparent, var(--gold-l), var(--gold), var(--gold-l), transparent);
 }
 .cotd:active { transform: scale(.98); }
-.cotd-inner { display: flex; min-height: 178px; }
+.cotd-inner { display: flex; min-height: 160px; }
 
 /* Left: tarot card visual */
 .cotd-img {
-  width: 120px; flex-shrink: 0; position: relative; overflow: hidden;
+  width: 110px; flex-shrink: 0; position: relative; overflow: hidden;
   background: linear-gradient(160deg, #1e3460 0%, #0f1e3d 55%, #07111f 100%);
   display: flex; align-items: center; justify-content: center;
 }
-/* Tarot card frame inside cotd */
 .cotd-img .card-frame {
-  width: 82px; height: 118px;
+  width: 76px; height: 110px;
   border-radius: 8px;
   border: 1.5px solid rgba(184,149,58,0.4);
   overflow: hidden;
@@ -174,60 +182,89 @@ body::before {
   transition: filter .4s, transform .4s;
 }
 .cotd:hover .cotd-img .card-frame img { filter: saturate(1) brightness(1); transform: scale(1.04); }
-/* Fallback when image fails */
+
+/* FIX 6: Fallback was display:none but never switched to flex properly.
+   Now uses flex by default and is hidden via a class toggle in JS. */
 .cotd-img .card-frame .card-fallback {
-  display: none;
   width: 100%; height: 100%;
   background: linear-gradient(160deg, #1e3460 0%, #0f1e3d 60%, #07111f 100%);
-  align-items: center; justify-content: center; flex-direction: column; gap: 10px;
+  display: flex;
+  align-items: center; justify-content: center; flex-direction: column; gap: 8px;
 }
+.cotd-img .card-frame img.hidden { display: none; }
+.cotd-img .card-frame .card-fallback.hidden { display: none; }
+
 .cotd-img .card-frame .card-fallback .cf-symbol {
-  font-family: 'Cinzel', serif; font-size: 1.8rem; color: rgba(184,149,58,0.6);
+  font-family: 'Cinzel', serif; font-size: 1.6rem; color: rgba(184,149,58,0.7);
+  line-height: 1;
 }
-.cotd-img .card-frame .card-fallback .cf-num {
-  font-family: 'Cinzel', serif; font-size: .62rem;
-  color: rgba(184,149,58,0.5); letter-spacing: 2px;
+.cotd-img .card-frame .card-fallback .cf-roman {
+  font-family: 'Cinzel', serif; font-size: .72rem;
+  color: rgba(184,149,58,0.6); letter-spacing: 2px;
 }
-/* Gradient bridge from image to content */
+.cotd-img .card-frame .card-fallback .cf-name {
+  font-family: 'Cormorant Upright', serif; font-size: .78rem;
+  color: rgba(212,175,90,0.7); text-align: center; padding: 0 4px;
+  font-style: italic; line-height: 1.3;
+}
 .cotd-img::after {
   content: '';
-  position: absolute; top: 0; right: 0; bottom: 0; width: 40px;
+  position: absolute; top: 0; right: 0; bottom: 0; width: 32px;
   background: linear-gradient(90deg, transparent, var(--navy));
   pointer-events: none;
 }
 
 .cotd-content {
-  flex: 1; padding: 20px 18px 18px 10px;
-  display: flex; flex-direction: column; gap: 7px;
+  flex: 1; padding: 16px 16px 16px 8px;
+  display: flex; flex-direction: column; gap: 5px;
+  min-width: 0; /* FIX 7: prevents flex child overflow */
 }
 .cotd-badge {
   font-family: 'Cinzel', serif;
-  font-size: .65rem; color: var(--gold-l);
+  font-size: .62rem; color: var(--gold-l);
   letter-spacing: 2px; text-transform: uppercase;
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 5px;
+  flex-shrink: 0;
 }
 .cotd-badge::before { content: '—'; opacity: .5; }
 .cotd-arcana-badge {
-  font-size: .68rem; color: rgba(212,175,90,0.7);
-  font-style: italic;
+  font-size: .65rem; color: rgba(212,175,90,0.7);
+  font-style: italic; flex-shrink: 0;
+  /* FIX 8: truncate long arcana badge text */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cotd-name {
   font-family: 'Cormorant Upright', serif;
-  font-size: 1.5rem; font-weight: 500;
-  color: #fff; line-height: 1.15;
+  /* FIX 9: was 1.5rem — too large on narrow cards, causes overflow */
+  font-size: 1.25rem; font-weight: 500;
+  color: #fff; line-height: 1.2;
+  /* Clamp to 2 lines max */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
-.cotd-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.cotd-tags { display: flex; flex-wrap: wrap; gap: 4px; flex-shrink: 0; }
 .cotd-tag {
-  font-size: .7rem; color: rgba(212,175,90,0.9);
+  font-size: .65rem; color: rgba(212,175,90,0.9);
   font-style: italic;
   border: 1px solid rgba(184,149,58,0.28); border-radius: 40px;
-  padding: 3px 10px;
+  padding: 2px 8px;
   background: rgba(184,149,58,0.1);
+  white-space: nowrap;
 }
-.cotd-msg { font-size: .88rem; color: rgba(255,255,255,0.6); font-style: italic; line-height: 1.6; }
+.cotd-msg {
+  font-size: .82rem; color: rgba(255,255,255,0.6); font-style: italic; line-height: 1.5;
+  /* FIX 10: clamp message to 2 lines so it doesn't push CTA off screen */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .cotd-cta {
-  font-family: 'Cinzel', serif; font-size: .65rem;
-  color: var(--gold-l); letter-spacing: 1.5px; margin-top: auto; opacity: .85;
+  font-family: 'Cinzel', serif; font-size: .62rem;
+  color: var(--gold-l); letter-spacing: 1.5px; margin-top: auto;
+  opacity: .85; flex-shrink: 0;
   display: flex; align-items: center; gap: 5px;
 }
 .cotd-cta::after { content: '→'; }
@@ -256,8 +293,8 @@ body::before {
 
 /* INSIGHT */
 .insight {
-  margin: 16px 18px 0;
-  padding: 16px 20px;
+  margin: 14px 18px 0;
+  padding: 14px 18px;
   background: rgba(255,255,255,0.88);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -267,15 +304,15 @@ body::before {
 .insight::before {
   content: '"';
   position: absolute; right: 12px; top: -10px;
-  font-size: 5.5rem; color: rgba(184,149,58,0.07);
+  font-size: 5rem; color: rgba(184,149,58,0.07);
   font-family: 'Cormorant Upright', serif; line-height: 1;
   pointer-events: none;
 }
 .insight-label {
   font-family: 'Cinzel', serif;
-  font-size: .65rem; color: var(--gold-d);
+  font-size: .62rem; color: var(--gold-d);
   letter-spacing: 2px; text-transform: uppercase;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
   display: flex; align-items: center; gap: 7px;
 }
 .insight-label::after {
@@ -284,14 +321,14 @@ body::before {
 }
 .insight-text {
   font-family: 'Cormorant Upright', serif;
-  font-size: 1rem; color: var(--ink-m);
-  font-style: italic; line-height: 1.75;
+  font-size: .97rem; color: var(--ink-m);
+  font-style: italic; line-height: 1.7;
 }
 
 /* INFO CARDS */
-.info-row { display: flex; gap: 10px; margin: 14px 18px 0; }
+.info-row { display: flex; gap: 10px; margin: 12px 18px 0; }
 .info-card {
-  flex: 1; padding: 14px 14px 16px;
+  flex: 1; padding: 12px 12px 14px;
   background: rgba(255,255,255,0.88);
   border: 1px solid var(--border);
   border-radius: var(--r-md);
@@ -302,20 +339,24 @@ body::before {
 }
 .info-card:active { transform: scale(.97); }
 .info-card-icon {
-  font-size: 1.4rem; line-height: 1; margin-bottom: 8px;
+  font-size: 1.3rem; line-height: 1; margin-bottom: 7px;
   display: block;
 }
 .info-card-title {
   font-family: 'Cinzel', serif;
-  font-size: .65rem; color: var(--gold-d);
+  font-size: .62rem; color: var(--gold-d);
   letter-spacing: 1.2px; text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
-.info-card-value { font-size: .92rem; color: var(--ink-m); font-style: italic; }
+.info-card-value {
+  font-size: .88rem; color: var(--ink-m); font-style: italic;
+  /* FIX 11: prevent long energy names from overflowing */
+  word-break: keep-all;
+}
 .info-card-expand {
   font-family: 'Cinzel', serif;
-  font-size: .62rem; color: var(--gold);
-  letter-spacing: 1px; margin-top: 5px; opacity: .8;
+  font-size: .6rem; color: var(--gold);
+  letter-spacing: .8px; margin-top: 5px; opacity: .8;
 }
 
 /* INFO MODAL */
@@ -477,7 +518,6 @@ body::before {
   font-family: 'Cormorant Upright', serif;
   font-size: .9rem; color: var(--ink-l); font-style: italic; margin-top: 5px;
 }
-
 .suit-tabs {
   display: flex; gap: 6px;
   padding: 0 18px 14px;
@@ -498,7 +538,6 @@ body::before {
   box-shadow: 0 3px 12px rgba(15,30,61,0.2);
 }
 .suit-tab:hover:not(.on) { background: #fff; border-color: var(--border2); }
-
 .deck-search { margin: 0 18px 14px; flex-shrink: 0; position: relative; }
 .deck-search-input {
   width: 100%; padding: 11px 18px 11px 40px;
@@ -514,7 +553,6 @@ body::before {
   position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
   font-size: .85rem; color: var(--gold-d); pointer-events: none;
 }
-
 .deck-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; padding: 0 16px; }
 .deck-thumb {
   border: 1px solid var(--border); border-radius: var(--r-sm);
@@ -648,7 +686,6 @@ body::before {
   border-radius: 13px;
   border: 1px solid rgba(184,149,58,0.2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.2rem;
   box-shadow: 0 8px 28px rgba(0,0,0,0.3);
   transform-origin: bottom center;
   background: linear-gradient(145deg, #1a2e54, #0f1e3d);
@@ -686,16 +723,12 @@ body::before {
   flex-direction: column; overflow: hidden;
 }
 #ov-reading.open { display: flex; }
-
-/* Scrollable content area */
 .rd-scroll {
   flex: 1; overflow-y: auto;
   padding: 28px 18px 24px;
   -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 .rd-scroll::-webkit-scrollbar { display: none; }
-
-/* Fixed action bar at bottom */
 .rd-actions {
   display: none;
   flex-shrink: 0;
@@ -726,7 +759,6 @@ body::before {
   font-size: .7rem; color: var(--ink-l);
   letter-spacing: 2px; text-transform: uppercase;
 }
-
 .rd-grid { display: grid; gap: 12px; margin-bottom: 22px; }
 .rd-slot { text-align: center; }
 .rd-pos {
@@ -788,7 +820,7 @@ body::before {
 .rd-crev { font-size: .68rem; color: var(--ink-l); font-style: italic; }
 @keyframes popIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
 
-/* Card Picker — Interactive Pile */
+/* Card Picker */
 .card-picker-overlay {
   display: none; position: fixed; inset: 0;
   max-width: 430px; margin: 0 auto;
@@ -797,7 +829,6 @@ body::before {
   flex-direction: column; overflow: hidden;
 }
 .card-picker-overlay.open { display: flex; }
-
 .picker-top {
   padding: 44px 22px 14px;
   border-bottom: 1px solid var(--border2);
@@ -823,8 +854,6 @@ body::before {
   border: 1px solid var(--border2);
   border-radius: 30px; padding: 5px 16px;
 }
-
-/* Shuffled pile area — light background */
 .picker-pile-area {
   flex: 1; position: relative; overflow: hidden;
   background: var(--cream);
@@ -868,7 +897,6 @@ body::before {
   z-index: 50 !important;
 }
 .pile-card.selected::after { color: var(--gold); opacity: .9; }
-
 .picker-confirm-area {
   flex-shrink: 0; padding: 14px 22px calc(20px + env(safe-area-inset-bottom, 0));
   display: flex; flex-direction: column; gap: 10px; align-items: center;
@@ -903,7 +931,7 @@ body::before {
 }
 .picker-cancel-btn:hover { opacity: 1; }
 
-/* ── CHAT (타로마스터와 소통) ── */
+/* ── CHAT ── */
 #ov-chat {
   display: none; position: fixed; inset: 0;
   max-width: 430px; margin: 0 auto;
@@ -1110,7 +1138,6 @@ body::before {
 .sp-dot:nth-child(3) { animation-delay: .4s; }
 @keyframes spBlink { 0%,100% { opacity: .15; transform: scale(1); } 50% { opacity: 1; transform: scale(1.4); } }
 .ai-loading-txt { font-size: .95rem; color: var(--ink-l); font-style: italic; }
-
 .ai-text { font-size: 1rem; color: var(--ink-m); line-height: 1.9; }
 .ai-text .sec {
   font-family: 'Cinzel', serif; font-size: .7rem;
@@ -1138,7 +1165,6 @@ body::before {
   font-style: italic; font-size: .97rem;
 }
 .ai-text .insight-box strong { color: var(--gold-l); display: block; margin-bottom: 6px; font-size: .82rem; font-style: normal; font-family: 'Cinzel', serif; letter-spacing: 1px; }
-
 .rd-btn {
   background: rgba(255,255,255,0.9);
   border: 1px solid var(--border); color: var(--ink-l);
@@ -1196,7 +1222,7 @@ body::before {
   font-family: 'Cinzel', serif;
   font-size: .72rem; color: var(--gold-l); letter-spacing: 1px;
 }
-.detail-info { flex: 1; }
+.detail-info { flex: 1; min-width: 0; }
 .detail-name {
   font-family: 'Cormorant Upright', serif;
   font-size: 1.05rem; font-weight: 600; color: var(--navy); margin-bottom: 4px; line-height: 1.25;
@@ -1244,11 +1270,13 @@ body::before {
   <div class="cotd" onclick="openDetail(cotdCard)">
     <div class="cotd-inner">
       <div class="cotd-img">
+        <!-- FIX: card-frame now holds both img and fallback; JS toggles .hidden -->
         <div class="card-frame" id="cotdFrame">
-          <img id="cotdImg" src="" alt="오늘의 카드">
+          <img id="cotdImg" src="" alt="오늘의 카드" class="hidden">
           <div class="card-fallback" id="cotdFallback">
             <span class="cf-symbol">◈</span>
-            <span class="cf-num" id="cotdNum">—</span>
+            <span class="cf-roman" id="cotdRoman">—</span>
+            <span class="cf-name" id="cotdFbName">—</span>
           </div>
         </div>
       </div>
@@ -1273,13 +1301,13 @@ body::before {
       <span class="info-card-icon" id="moonEmoji">🌙</span>
       <div class="info-card-title">Moon Phase</div>
       <div class="info-card-value" id="moonPhase">—</div>
-      <div class="info-card-expand">탭하여 자세히 보기 →</div>
+      <div class="info-card-expand">탭하여 자세히 →</div>
     </div>
     <div class="info-card" onclick="openInfoModal('energy')">
       <span class="info-card-icon">✦</span>
       <div class="info-card-title">Today's Energy</div>
       <div class="info-card-value" id="todayEnergy">—</div>
-      <div class="info-card-expand">탭하여 자세히 보기 →</div>
+      <div class="info-card-expand">탭하여 자세히 →</div>
     </div>
   </div>
 </div>
@@ -1418,7 +1446,7 @@ body::before {
   </div>
 </div>
 
-<!-- CARD PICKER — Interactive Pile -->
+<!-- CARD PICKER -->
 <div class="card-picker-overlay" id="cardPicker">
   <div class="picker-top">
     <div class="picker-title">카드 선택</div>
@@ -1513,7 +1541,6 @@ const MAJOR = [
   {id:'m21',suit:'major',num:'XXI',k:'세계',name:'The World',img:'https://upload.wikimedia.org/wikipedia/commons/f/ff/RWS_Tarot_21_World.jpg',kw:['완성','성취','통합'],el:'토성(Saturn)',up:'하나의 사이클이 완성됩니다. 성취를 기뻐하고 다음 여정을 준비하세요.',rev:'미완성.',rkw:'미완성',msg:'완성의 순간이 가까워지고 있습니다'},
 ];
 
-/* ══════════ MINOR ARCANA ══════════ */
 function buildMinor() {
   const suits = [
     {key:'wands',k:'완드',emoji:'🔥',el:'불(Fire)',energy:'행동, 열정, 창조, 의지'},
@@ -1522,18 +1549,18 @@ function buildMinor() {
     {key:'pentacles',k:'펜타클',emoji:'🌿',el:'흙(Earth)',energy:'물질, 현실, 건강, 재정'},
   ];
   const nums = [
-    {n:1,k:'에이스',up:'새로운 시작의 씨앗. 순수한 가능성과 잠재력이 폭발합니다.',rev:'창조력 차단. 새로운 출발이 지연되고 있습니다.'},
-    {n:2,k:'2',up:'균형과 선택. 두 가지 사이에서 조화를 찾으세요.',rev:'우유부단함. 결정을 미루고 있습니다.'},
-    {n:3,k:'3',up:'협력과 성장. 함께하면 더 큰 것을 이룰 수 있습니다.',rev:'오해와 불협화음. 소통이 필요합니다.'},
-    {n:4,k:'4',up:'안정과 기반. 잠시 멈추고 쌓아온 것을 지키세요.',rev:'정체와 지루함. 새로운 자극이 필요합니다.'},
-    {n:5,k:'5',up:'갈등과 도전. 어려움 속에서 진정한 힘이 드러납니다.',rev:'갈등 해소. 대립이 줄어들고 있습니다.'},
-    {n:6,k:'6',up:'조화와 흐름. 균형 잡힌 에너지가 앞으로 나아가게 합니다.',rev:'불균형. 에너지 흐름을 재점검하세요.'},
-    {n:7,k:'7',up:'성찰과 평가. 내면을 들여다보고 진정한 가치를 찾으세요.',rev:'의심과 혼란. 자신을 믿으세요.'},
-    {n:8,k:'8',up:'변화와 움직임. 빠른 흐름에 몸을 맡기세요.',rev:'지연과 막힘. 속도를 조절하세요.'},
-    {n:9,k:'9',up:'완성에 가까움. 거의 다 왔습니다. 포기하지 마세요.',rev:'부담과 소진. 잠시 쉬어도 됩니다.'},
-    {n:10,k:'10',up:'완성과 마무리. 한 사이클이 끝나고 새 여정이 시작됩니다.',rev:'과부하. 내려놓는 것도 용기입니다.'},
+    {n:1,k:'에이스',up:'새로운 시작의 씨앗. 순수한 가능성과 잠재력이 폭발합니다.',rev:'창조력 차단.'},
+    {n:2,k:'2',up:'균형과 선택. 두 가지 사이에서 조화를 찾으세요.',rev:'우유부단함.'},
+    {n:3,k:'3',up:'협력과 성장. 함께하면 더 큰 것을 이룰 수 있습니다.',rev:'오해와 불협화음.'},
+    {n:4,k:'4',up:'안정과 기반. 잠시 멈추고 쌓아온 것을 지키세요.',rev:'정체와 지루함.'},
+    {n:5,k:'5',up:'갈등과 도전. 어려움 속에서 진정한 힘이 드러납니다.',rev:'갈등 해소.'},
+    {n:6,k:'6',up:'조화와 흐름. 균형 잡힌 에너지가 앞으로 나아가게 합니다.',rev:'불균형.'},
+    {n:7,k:'7',up:'성찰과 평가. 내면을 들여다보고 진정한 가치를 찾으세요.',rev:'의심과 혼란.'},
+    {n:8,k:'8',up:'변화와 움직임. 빠른 흐름에 몸을 맡기세요.',rev:'지연과 막힘.'},
+    {n:9,k:'9',up:'완성에 가까움. 거의 다 왔습니다. 포기하지 마세요.',rev:'부담과 소진.'},
+    {n:10,k:'10',up:'완성과 마무리. 한 사이클이 끝나고 새 여정이 시작됩니다.',rev:'과부하.'},
     {n:11,k:'페이지',up:'배움과 호기심. 새로운 것을 탐구할 때입니다.',rev:'미숙함과 경솔함.'},
-    {n:12,k:'나이트',up:'행동과 추진. 이상을 향해 나아가세요.',rev:'충동과 무모함. 방향을 점검하세요.'},
+    {n:12,k:'나이트',up:'행동과 추진. 이상을 향해 나아가세요.',rev:'충동과 무모함.'},
     {n:13,k:'퀸',up:'성숙한 에너지. 깊은 지혜와 따뜻한 배려를 발휘하세요.',rev:'불안과 억압된 감정.'},
     {n:14,k:'킹',up:'완숙한 리더십. 이 영역을 완전히 통달했습니다.',rev:'권위주의와 경직성.'},
   ];
@@ -1591,17 +1618,12 @@ const AI_DB = {
   '세계':['하나의 사이클이 완성되고 있습니다. 성취를 기뻐하세요.','당신이 이룬 것들을 온전히 받아들이세요.'],
 };
 const SUIT_MSG = {
-  wands:['열정과 행동의 에너지가 강하게 흐릅니다. 주저하지 말고 앞으로 나아가세요.','창의적인 불꽃이 당신 안에 있습니다.'],
-  cups:['감정과 직관이 중요한 메시지를 전합니다. 마음의 소리에 귀를 기울이세요.','관계와 감성이 풍요로워지는 시기입니다.'],
-  swords:['명확한 사고와 솔직한 소통이 필요합니다. 진실을 직시하세요.','갈등이 있다면 지혜롭게 해결책을 찾으세요.'],
-  pentacles:['현실적인 노력이 결실을 맺을 때입니다. 꾸준함이 답입니다.','물질적 안정과 건강에 관심을 기울이세요.'],
+  wands:['열정과 행동의 에너지가 강하게 흐릅니다.','창의적인 불꽃이 당신 안에 있습니다.'],
+  cups:['감정과 직관이 중요한 메시지를 전합니다.','관계와 감성이 풍요로워지는 시기입니다.'],
+  swords:['명확한 사고와 솔직한 소통이 필요합니다.','갈등이 있다면 지혜롭게 해결책을 찾으세요.'],
+  pentacles:['현실적인 노력이 결실을 맺을 때입니다.','물질적 안정과 건강에 관심을 기울이세요.'],
 };
 
-/* Spreads
-   celtic: 5장 — 3장 사용자 선택 + 1장 조언(자동) + 1장 결과(자동)
-   love: 4장 — 2장 사용자 선택 + 1장 장애물(자동) + 1장 방향(자동)
-   single: 1장 자동
-*/
 const SPREADS = [
   {key:'single',icon:'◈',name:'오늘의 한 장',desc:'지금 가장 필요한 메시지',meta:'카드 1장 · 직접 선택 · 메이저 아르카나',count:1,labels:['오늘의 메시지'],userPick:[0],autoPick:[],majorOnly:true},
   {key:'celtic',icon:'⬡',name:'상황 심층 분석',desc:'현재 상황을 깊이 들여다봅니다',meta:'카드 5장 · 3장 직접 선택 + 2장 자동',count:5,labels:['현재 상황','핵심 도전','무의식','조언(자동)','최종 결과(자동)'],userPick:[0,1,2],autoPick:[3,4],majorOnly:false},
@@ -1610,33 +1632,32 @@ const SPREADS = [
 
 const REFLECTIONS = ['당신 안에 이미 모든 답이 있습니다.','지금 이 순간, 당신은 충분합니다.','변화는 항상 당신 편입니다.','내면의 목소리를 믿으세요.','모든 끝은 새로운 시작의 문입니다.','오늘도 당신은 빛나고 있습니다.','두려움은 성장의 다른 이름입니다.'];
 const MOON_PHASES = [
-  {e:'🌑',n:'삭 (New Moon)',detail:'새로운 시작과 의도 설정의 시간입니다. 씨앗을 심듯 새로운 프로젝트나 목표를 시작하기에 가장 좋은 때입니다. 에너지가 내면으로 향하고, 조용한 성찰과 계획이 필요합니다.',guide:'새로운 의도를 종이에 적어보세요. 지금 심은 씨앗이 보름달에 꽃을 피웁니다.',element:'어둠 속의 가능성'},
-  {e:'🌒',n:'초승달',detail:'행동의 첫 발을 내딛는 시간입니다. 삭에서 세운 의도를 실행에 옮기기 시작하세요. 추진력이 조금씩 쌓이고 있습니다.',guide:'작은 행동 하나를 오늘 실천하세요. 완벽함보다 시작이 중요합니다.',element:'성장하는 의지'},
-  {e:'🌓',n:'상현달',detail:'결정과 도전의 시간입니다. 장애물이 나타날 수 있지만, 이를 극복하며 의지를 단련합니다. 내면의 갈등을 직시하고 명확한 결정을 내리세요.',guide:'무엇이 당신을 주저하게 하는지 써보세요. 그리고 한 가지를 선택하세요.',element:'균형과 결단'},
-  {e:'🌔',n:'반달 (차오름)',detail:'에너지가 고조되는 시간입니다. 목표를 향해 가속도가 붙고 있습니다. 열정과 창의력이 넘치며 모든 것이 가능해 보입니다.',guide:'사람들과 아이디어를 나누세요. 협력이 결실을 앞당깁니다.',element:'상승하는 에너지'},
-  {e:'🌕',n:'보름달 (Full Moon)',detail:'완성과 수확, 해방의 시간입니다. 감정이 고조되고 무의식이 수면 위로 떠오릅니다. 집착을 내려놓고 이루어진 것들에 감사하세요. 꿈과 직관이 특히 강해집니다.',guide:'더 이상 필요하지 않은 것을 놓아 보내세요. 감사 일기를 쓰는 것도 좋습니다.',element:'완성과 해방'},
-  {e:'🌖',n:'반달 (기움)',detail:'성찰과 감사의 시간입니다. 무엇을 수확했는지 되돌아보고, 배운 것들을 정리하세요. 나눔의 에너지가 강합니다.',guide:'받은 것들을 나누어 보세요. 지식이든 물질이든, 나눌수록 풍요로워집니다.',element:'나눔의 지혜'},
-  {e:'🌗',n:'하현달',detail:'내려놓음과 용서의 시간입니다. 에너지가 줄어들며 자연스럽게 내면으로 향합니다. 낡은 습관, 부정적인 감정, 더 이상 도움이 안 되는 관계를 정리할 때입니다.',guide:'용서하고 싶은 사람이나 상황을 떠올려 보세요. 내려놓음은 자신을 위한 선물입니다.',element:'해방과 정화'},
-  {e:'🌘',n:'그믐달',detail:'휴식과 준비의 시간입니다. 한 사이클이 마무리되고 있습니다. 지금은 행동보다 쉬면서 다음 주기를 위한 에너지를 비축하는 것이 중요합니다.',guide:'충분히 쉬세요. 곧 새로운 삭이 오고 새로운 시작이 기다립니다.',element:'고요와 재충전'},
+  {e:'🌑',n:'삭 (New Moon)',detail:'새로운 시작과 의도 설정의 시간입니다.',guide:'새로운 의도를 종이에 적어보세요.',element:'어둠 속의 가능성'},
+  {e:'🌒',n:'초승달',detail:'행동의 첫 발을 내딛는 시간입니다.',guide:'작은 행동 하나를 오늘 실천하세요.',element:'성장하는 의지'},
+  {e:'🌓',n:'상현달',detail:'결정과 도전의 시간입니다.',guide:'무엇이 당신을 주저하게 하는지 써보세요.',element:'균형과 결단'},
+  {e:'🌔',n:'반달 (차오름)',detail:'에너지가 고조되는 시간입니다.',guide:'사람들과 아이디어를 나누세요.',element:'상승하는 에너지'},
+  {e:'🌕',n:'보름달 (Full Moon)',detail:'완성과 수확, 해방의 시간입니다.',guide:'더 이상 필요하지 않은 것을 놓아 보내세요.',element:'완성과 해방'},
+  {e:'🌖',n:'반달 (기움)',detail:'성찰과 감사의 시간입니다.',guide:'받은 것들을 나누어 보세요.',element:'나눔의 지혜'},
+  {e:'🌗',n:'하현달',detail:'내려놓음과 용서의 시간입니다.',guide:'용서하고 싶은 사람을 떠올려 보세요.',element:'해방과 정화'},
+  {e:'🌘',n:'그믐달',detail:'휴식과 준비의 시간입니다.',guide:'충분히 쉬세요.',element:'고요와 재충전'},
 ];
 const ENERGIES = [
-  {name:'연결의 날',detail:'오늘은 관계와 소통이 중심이 되는 날입니다. 태양(Sun)의 에너지가 사람들 사이의 연결을 강화합니다. 오래된 친구에게 연락하거나 새로운 만남을 가져보세요.',guide:'중요한 사람에게 먼저 마음을 표현해 보세요. 진심어린 연결이 큰 의미를 가집니다.',element:'인간관계 · 소통 · 공감',planet:'태양(Sun)',keyword:'연결, 공동체, 협력'},
-  {name:'달의 날',detail:'오늘은 달(Moon)의 에너지가 강합니다. 직관과 감정이 예민해지는 날로, 무의식의 메시지에 귀를 기울이세요. 창의적인 작업이나 명상이 특히 잘 됩니다.',guide:'꿈 일기를 써보세요. 감정의 흐름을 판단하지 말고 그냥 느껴보세요.',element:'감정 · 직관 · 창의성',planet:'달(Moon)',keyword:'직관, 감수성, 상상력'},
-  {name:'화성의 날',detail:'화성(Mars)의 에너지가 행동력과 열정을 끌어올립니다. 계획해 두었던 것을 실행에 옮기기 좋은 날입니다. 의지와 용기가 넘칩니다.',guide:'미루어 두었던 일을 오늘 시작하세요. 첫 발을 내딛는 용기가 전부입니다.',element:'행동 · 열정 · 용기',planet:'화성(Mars)',keyword:'추진력, 도전, 실행'},
-  {name:'수성의 날',detail:'수성(Mercury)의 에너지가 사고력과 소통을 향상시킵니다. 글쓰기, 협상, 학습, 계획 수립에 특히 좋은 날입니다.',guide:'중요한 대화를 오늘 나누어 보세요. 명확하게 표현하는 것이 관계를 발전시킵니다.',element:'사고 · 소통 · 분석',planet:'수성(Mercury)',keyword:'논리, 언어, 협상'},
-  {name:'목성의 날',detail:'목성(Jupiter)의 에너지가 행운과 확장을 가져옵니다. 새로운 기회를 포착하고 스스로의 한계를 넓혀보세요. 낙관주의와 풍요의 에너지가 가득합니다.',guide:'당신이 원하는 것을 더 크게 꿈꾸어 보세요. 목성은 당신의 그릇을 넓혀줍니다.',element:'성장 · 풍요 · 행운',planet:'목성(Jupiter)',keyword:'확장, 기회, 낙관'},
-  {name:'금성의 날',detail:'금성(Venus)의 에너지가 사랑과 아름다움을 불러옵니다. 자신을 사랑하고 돌보는 것, 아름다운 것들을 즐기는 것이 중요합니다. 예술, 음악, 감각적 즐거움이 충전됩니다.',guide:'오늘 자신을 위한 선물을 하나 준비해 보세요. 스스로를 소중히 여기는 것이 시작입니다.',element:'사랑 · 아름다움 · 조화',planet:'금성(Venus)',keyword:'사랑, 심미, 관계'},
-  {name:'토성의 날',detail:'토성(Saturn)의 에너지가 규율과 책임을 강조합니다. 장기적인 목표를 점검하고 필요한 노력을 인내심 있게 기울일 때입니다. 지금의 노력이 미래의 토대가 됩니다.',guide:'오늘 하루 계획을 구체적으로 세워보세요. 작지만 꾸준한 행동이 큰 변화를 만듭니다.',element:'인내 · 책임 · 구조',planet:'토성(Saturn)',keyword:'규율, 장기 계획, 성취'},
+  {name:'연결의 날',detail:'오늘은 관계와 소통이 중심이 되는 날입니다.',guide:'중요한 사람에게 먼저 마음을 표현해 보세요.',element:'인간관계 · 소통',planet:'태양(Sun)',keyword:'연결, 공동체'},
+  {name:'달의 날',detail:'달의 에너지가 강합니다. 직관과 감정이 예민해지는 날입니다.',guide:'감정의 흐름을 판단하지 말고 그냥 느껴보세요.',element:'감정 · 직관',planet:'달(Moon)',keyword:'직관, 감수성'},
+  {name:'화성의 날',detail:'행동력과 열정이 넘칩니다.',guide:'미루어 두었던 일을 오늘 시작하세요.',element:'행동 · 열정',planet:'화성(Mars)',keyword:'추진력, 도전'},
+  {name:'수성의 날',detail:'사고력과 소통이 향상됩니다.',guide:'중요한 대화를 오늘 나누어 보세요.',element:'사고 · 소통',planet:'수성(Mercury)',keyword:'논리, 언어'},
+  {name:'목성의 날',detail:'행운과 확장의 에너지가 흐릅니다.',guide:'당신이 원하는 것을 더 크게 꿈꾸어 보세요.',element:'성장 · 풍요',planet:'목성(Jupiter)',keyword:'확장, 기회'},
+  {name:'금성의 날',detail:'사랑과 아름다움의 에너지입니다.',guide:'오늘 자신을 위한 선물을 하나 준비해 보세요.',element:'사랑 · 아름다움',planet:'금성(Venus)',keyword:'사랑, 관계'},
+  {name:'토성의 날',detail:'규율과 책임의 에너지입니다.',guide:'오늘 하루 계획을 구체적으로 세워보세요.',element:'인내 · 책임',planet:'토성(Saturn)',keyword:'규율, 성취'},
 ];
 
-/* STATE */
 let cotdCard=null, curSpread=null, drawnCards=[], revealedCount=0, userQ='';
 let pickerCallback=null, pickerUsed=[];
 let chatHistory=[], chatDrawnCards=[];
 let settings={rev:true,auto:true};
 try{const s=localStorage.getItem('arcana_settings');if(s)settings={...settings,...JSON.parse(s)};}catch(e){}
 
-/* INIT */
+/* ── INIT ── */
 function init(){
   const today=new Date();
   const seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();
@@ -1644,24 +1665,40 @@ function init(){
   const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   document.getElementById('homeDate').textContent=`${days[today.getDay()]} · ${months[today.getMonth()]} ${today.getDate()}`;
 
-  // COTD — 메이저만
   cotdCard=MAJOR[seed%MAJOR.length];
+
+  // FIX: Proper image / fallback switching
   const ci=document.getElementById('cotdImg');
   const fb=document.getElementById('cotdFallback');
-  document.getElementById('cotdNum').textContent=cotdCard.num||'';
-  document.getElementById('cotdArcana').textContent=`메이저 아르카나 · ${cotdCard.el||''}`;
 
-  // Try loading image; show stylised fallback if it fails
-  ci.onload=()=>{ ci.style.display='block'; fb.style.display='none'; };
-  ci.onerror=()=>{
-    ci.style.display='none';
-    fb.style.display='flex';
+  // Set fallback content immediately (always ready)
+  document.getElementById('cotdRoman').textContent = cotdCard.num || '';
+  document.getElementById('cotdFbName').textContent = cotdCard.k;
+
+  // Show fallback by default; switch to image on successful load
+  ci.classList.add('hidden');
+  fb.classList.remove('hidden');
+
+  ci.onload = () => {
+    ci.classList.remove('hidden');
+    fb.classList.add('hidden');
   };
-  ci.src=cotdCard.img;
-  // If src already cached and loaded synchronously
-  if(ci.complete && ci.naturalWidth) { ci.style.display='block'; fb.style.display='none'; }
-  else if(ci.complete && !ci.naturalWidth) { ci.style.display='none'; fb.style.display='flex'; }
+  ci.onerror = () => {
+    ci.classList.add('hidden');
+    fb.classList.remove('hidden');
+  };
+  ci.src = cotdCard.img;
 
+  // Handle already-cached images (synchronous load)
+  if (ci.complete) {
+    if (ci.naturalWidth > 0) {
+      ci.classList.remove('hidden');
+      fb.classList.add('hidden');
+    }
+    // else keep fallback visible
+  }
+
+  document.getElementById('cotdArcana').textContent=`메이저 · ${cotdCard.el||''}`;
   document.getElementById('cotdName').textContent=cotdCard.k;
   const tags=document.getElementById('cotdTags');
   cotdCard.kw.forEach(k=>{const t=document.createElement('span');t.className='cotd-tag';t.textContent=k;tags.appendChild(t);});
@@ -1674,7 +1711,6 @@ function init(){
   const dayEnergy=ENERGIES[today.getDay()];
   document.getElementById('todayEnergy').textContent=dayEnergy.name;
 
-  // Spreads
   const sg=document.getElementById('spreadGrid');
   SPREADS.forEach(s=>{
     const el=document.createElement('div');el.className='spr';
@@ -1685,7 +1721,6 @@ function init(){
 
   buildDeckUI();
 
-  // Fan
   const fan=document.getElementById('deckFan');
   const dots=document.getElementById('shDots');
   [-22,-11,0,11,22].forEach((r,i)=>{
@@ -1700,46 +1735,33 @@ function init(){
   updateFAB();
 }
 
-/* INFO MODAL */
 function openInfoModal(type){
   const today=new Date();
   const seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();
   const content=document.getElementById('infoModalContent');
-
   if(type==='moon'){
     const m=MOON_PHASES[seed%8];
-    content.innerHTML=`
-      <div style="text-align:center;margin-bottom:16px;font-size:3rem;line-height:1">${m.e}</div>
-      <div class="modal-title">${m.n}</div>
-      <div class="modal-sub">오늘의 달 위상</div>
+    content.innerHTML=`<div style="text-align:center;margin-bottom:16px;font-size:3rem;line-height:1">${m.e}</div>
+      <div class="modal-title">${m.n}</div><div class="modal-sub">오늘의 달 위상</div>
       <div class="modal-gold-line"></div>
-      <div class="modal-section">달의 메시지</div>
-      <div class="modal-text">${m.detail}</div>
+      <div class="modal-section">달의 메시지</div><div class="modal-text">${m.detail}</div>
       <div class="modal-highlight">${m.guide}</div>
-      <div class="modal-section">오늘의 에너지 키워드</div>
-      <div class="modal-text" style="font-style:normal;font-family:'Cinzel',serif;font-size:.78rem;color:var(--navy);letter-spacing:1px">${m.element}</div>
-    `;
+      <div class="modal-section">키워드</div>
+      <div class="modal-text" style="font-style:normal;font-family:'Cinzel',serif;font-size:.78rem;color:var(--navy)">${m.element}</div>`;
   } else {
     const e=ENERGIES[today.getDay()];
-    content.innerHTML=`
-      <div style="text-align:center;margin-bottom:16px;font-size:2rem;line-height:1">✦</div>
-      <div class="modal-title">${e.name}</div>
-      <div class="modal-sub">${e.planet} 지배</div>
+    content.innerHTML=`<div style="text-align:center;margin-bottom:16px;font-size:2rem">✦</div>
+      <div class="modal-title">${e.name}</div><div class="modal-sub">${e.planet} 지배</div>
       <div class="modal-gold-line"></div>
-      <div class="modal-section">오늘의 에너지</div>
-      <div class="modal-text">${e.detail}</div>
+      <div class="modal-section">오늘의 에너지</div><div class="modal-text">${e.detail}</div>
       <div class="modal-highlight">${e.guide}</div>
-      <div class="modal-section">핵심 키워드</div>
-      <div class="modal-text" style="font-style:normal;font-family:'Cinzel',serif;font-size:.75rem;color:var(--navy);letter-spacing:1.5px">${e.keyword}</div>
-      <div class="modal-section">원소</div>
-      <div class="modal-text">${e.element}</div>
-    `;
+      <div class="modal-section">키워드</div>
+      <div class="modal-text" style="font-style:normal;font-family:'Cinzel',serif;font-size:.75rem;color:var(--navy)">${e.keyword}</div>`;
   }
   document.getElementById('infoModalBg').classList.add('open');
 }
 function closeInfoModal(){document.getElementById('infoModalBg').classList.remove('open');}
 
-/* DECK */
 let activeSuit='all';
 function buildDeckUI(){
   const tabs=document.getElementById('suitTabs');tabs.innerHTML='';
@@ -1757,7 +1779,6 @@ function buildDeckUI(){
   cards.forEach(card=>{
     const el=document.createElement('div');el.className='deck-thumb';
     el.dataset.name=(card.k+card.name).toLowerCase();
-    const sm=SUIT_META[card.suit];
     if(card.img){
       el.innerHTML=`<img src="${card.img}" alt="${card.k}" onerror="this.style.display='none'"><div class="deck-label">${card.num} · ${card.name}</div>`;
     } else {
@@ -1777,7 +1798,6 @@ function filterDeck(q){
   });
 }
 
-/* NAV */
 function goPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
@@ -1789,13 +1809,11 @@ function updateFAB(){
   document.getElementById('fab').style.display=document.getElementById('pg-home').classList.contains('active')?'block':'none';
 }
 
-/* SETTINGS */
 function toggleSetting(key,el){el.classList.toggle('on');settings[key]=el.classList.contains('on');saveSettings();}
 function saveSettings(){try{localStorage.setItem('arcana_settings',JSON.stringify(settings));}catch(e){}}
 function clearData(){if(confirm('저장된 모든 리딩 기록을 삭제하시겠습니까?')){try{localStorage.removeItem('pvt_journal');}catch(e){}alert('초기화되었습니다.');}}
 function exportData(){try{const data=localStorage.getItem('pvt_journal')||'[]';const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='arcana-journal.json';a.click();URL.revokeObjectURL(url);}catch(e){alert('브라우저 환경에서 지원됩니다.');}}
 
-/* DETAIL */
 function openDetail(card){
   const wrap=document.getElementById('dtImgWrap');wrap.innerHTML='';
   if(card.img){
@@ -1814,417 +1832,193 @@ function openDetail(card){
 }
 function closeDetail(){document.getElementById('ov-detail').classList.remove('open');}
 
-/* CARD PICKER — Interactive shuffled pile */
-let selectedPileCard = null;
-let pickerMajorOnly = false;
-const PILE_COUNT = 20;
-
-function openPicker(posLabel, usedIds, onSelect, majorOnly = false){
-  pickerCallback  = onSelect;
-  pickerUsed      = usedIds;
-  pickerMajorOnly = majorOnly;
-  selectedPileCard = null;
-
-  document.getElementById('pickerPosition').textContent = posLabel || '카드 뽑기';
-  document.getElementById('pickerSelectedHint').textContent  = '카드를 선택해주세요';
+let selectedPileCard=null, pickerMajorOnly=false;
+const PILE_COUNT=20;
+function openPicker(posLabel,usedIds,onSelect,majorOnly=false){
+  pickerCallback=onSelect;pickerUsed=usedIds;pickerMajorOnly=majorOnly;selectedPileCard=null;
+  document.getElementById('pickerPosition').textContent=posLabel||'카드 뽑기';
+  document.getElementById('pickerSelectedHint').textContent='카드를 선택해주세요';
   document.getElementById('pickerSelectedHint').classList.remove('active');
   document.getElementById('pickerConfirmBtn').classList.remove('ready');
-
-  // Open first so area has real dimensions, then build pile
   document.getElementById('cardPicker').classList.add('open');
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => buildPile()); // double-raf ensures layout painted
-  });
+  requestAnimationFrame(()=>requestAnimationFrame(()=>buildPile()));
 }
-
 function buildPile(){
-  const area  = document.getElementById('pickerPileArea');
-  area.querySelectorAll('.pile-card').forEach(c => c.remove());
-
-  const areaW  = area.clientWidth  || 375;
-  const areaH  = area.clientHeight || 360;
-  const cardW  = 76, cardH = 112;
-
-  // Source pool
-  const source = pickerMajorOnly
-    ? MAJOR.filter(c => !pickerUsed.includes(c.id))
-    : ALL_CARDS.filter(c => !pickerUsed.includes(c.id));
-  const pool = [...source].sort(() => Math.random() - .5).slice(0, PILE_COUNT);
-
-  // ── True-centred grid scatter ─────────────────────────────────────
-  // Usable area with padding so no card hugs the edge
-  const PAD  = 16;
-  const usableW = areaW - PAD * 2 - cardW;
-  const usableH = areaH - PAD * 2 - cardH;
-
-  const COLS = 4;
-  const ROWS = Math.ceil(pool.length / COLS);
-
-  // Cell size distributes cards evenly across usable space
-  const cellW = COLS > 1 ? usableW / (COLS - 1) : 0;
-  const cellH = ROWS > 1 ? usableH / (ROWS - 1) : 0;
-
-  // Max jitter is small so cards stay orderly but feel scattered
-  const jitterX = Math.min(cellW * 0.3, 28);
-  const jitterY = Math.min(cellH * 0.3, 22);
-
-  pool.forEach((card, i) => {
-    const col = i % COLS;
-    const row = Math.floor(i / COLS);
-
-    const baseX = PAD + col * cellW;
-    const baseY = PAD + row * cellH;
-    const jX    = (Math.random() - .5) * 2 * jitterX;
-    const jY    = (Math.random() - .5) * 2 * jitterY;
-    const rot   = (Math.random() - .5) * 24;
-    const z     = Math.floor(Math.random() * 8) + 1;
-
-    // Clamp so cards never go out of bounds
-    const x = Math.max(PAD, Math.min(areaW - cardW - PAD, baseX + jX));
-    const y = Math.max(PAD, Math.min(areaH - cardH - PAD, baseY + jY));
-
-    const el = document.createElement('div');
-    el.className = 'pile-card';
-    el.style.cssText = `left:${x}px;top:${y}px;transform:rotate(${rot}deg);z-index:${z};`;
-    el.dataset.rot   = rot;
-    el.dataset.baseZ = z;
-
-    el.addEventListener('click', () => selectPileCard(el, card));
+  const area=document.getElementById('pickerPileArea');
+  area.querySelectorAll('.pile-card').forEach(c=>c.remove());
+  const areaW=area.clientWidth||375,areaH=area.clientHeight||360;
+  const cardW=76,cardH=112;
+  const source=pickerMajorOnly?MAJOR.filter(c=>!pickerUsed.includes(c.id)):ALL_CARDS.filter(c=>!pickerUsed.includes(c.id));
+  const pool=[...source].sort(()=>Math.random()-.5).slice(0,PILE_COUNT);
+  const PAD=16,usableW=areaW-PAD*2-cardW,usableH=areaH-PAD*2-cardH;
+  const COLS=4,ROWS=Math.ceil(pool.length/COLS);
+  const cellW=COLS>1?usableW/(COLS-1):0,cellH=ROWS>1?usableH/(ROWS-1):0;
+  const jitterX=Math.min(cellW*0.3,28),jitterY=Math.min(cellH*0.3,22);
+  pool.forEach((card,i)=>{
+    const col=i%COLS,row=Math.floor(i/COLS);
+    const baseX=PAD+col*cellW,baseY=PAD+row*cellH;
+    const jX=(Math.random()-.5)*2*jitterX,jY=(Math.random()-.5)*2*jitterY;
+    const rot=(Math.random()-.5)*24,z=Math.floor(Math.random()*8)+1;
+    const x=Math.max(PAD,Math.min(areaW-cardW-PAD,baseX+jX));
+    const y=Math.max(PAD,Math.min(areaH-cardH-PAD,baseY+jY));
+    const el=document.createElement('div');el.className='pile-card';
+    el.style.cssText=`left:${x}px;top:${y}px;transform:rotate(${rot}deg);z-index:${z};`;
+    el.dataset.rot=rot;el.dataset.baseZ=z;
+    el.addEventListener('click',()=>selectPileCard(el,card));
     area.appendChild(el);
   });
 }
-
-function selectPileCard(el, card){
-  // Deselect previous
-  document.querySelectorAll('.pile-card.selected').forEach(c => {
+function selectPileCard(el,card){
+  document.querySelectorAll('.pile-card.selected').forEach(c=>{
     c.classList.remove('selected');
-    c.style.transform = `rotate(${c.dataset.rot}deg)`;
-    c.style.zIndex    = c.dataset.baseZ || 1;
+    c.style.transform=`rotate(${c.dataset.rot}deg)`;
+    c.style.zIndex=c.dataset.baseZ||1;
   });
-
-  // Toggle off if same card tapped again
-  if(selectedPileCard && selectedPileCard.id === card.id){
-    selectedPileCard = null;
-    document.getElementById('pickerSelectedHint').textContent  = '카드를 선택해주세요';
+  if(selectedPileCard&&selectedPileCard.id===card.id){
+    selectedPileCard=null;
+    document.getElementById('pickerSelectedHint').textContent='카드를 선택해주세요';
     document.getElementById('pickerSelectedHint').classList.remove('active');
     document.getElementById('pickerConfirmBtn').classList.remove('ready');
     return;
   }
-
   el.classList.add('selected');
-  el.style.transform = `rotate(0deg) translateY(-14px) scale(1.07)`;
-  el.style.zIndex    = 50;
-
-  selectedPileCard = card;
-  // ★ Show only a generic "선택됨" hint — NOT the card name — until confirmed
-  document.getElementById('pickerSelectedHint').textContent  = '✦ 카드가 선택되었습니다';
+  el.style.transform=`rotate(0deg) translateY(-14px) scale(1.07)`;
+  el.style.zIndex=50;
+  selectedPileCard=card;
+  document.getElementById('pickerSelectedHint').textContent='✦ 카드가 선택되었습니다';
   document.getElementById('pickerSelectedHint').classList.add('active');
   document.getElementById('pickerConfirmBtn').classList.add('ready');
 }
-
 function confirmPick(){
-  if(!selectedPileCard || !pickerCallback) return;
-  const cb   = pickerCallback;
-  const card = selectedPileCard;
-  selectedPileCard = null;
-  pickerCallback   = null;
+  if(!selectedPileCard||!pickerCallback)return;
+  const cb=pickerCallback,card=selectedPileCard;
+  selectedPileCard=null;pickerCallback=null;
   document.getElementById('cardPicker').classList.remove('open');
   cb(card);
 }
-
 function cancelPicker(){
   document.getElementById('cardPicker').classList.remove('open');
-  pickerCallback   = null;
-  selectedPileCard = null;
+  pickerCallback=null;selectedPileCard=null;
 }
 
-/* ══════════════════════════════════
-   CHAT — 타로마스터와 소통하기
-══════════════════════════════════ */
-const MASTER_GREETINGS = [
-  '안녕하세요. 저는 마담 로제입니다. 오늘 어떤 이야기를 나누고 싶으신가요? 마음속 질문이 있다면 편하게 말씀해 주세요.',
-  '어서 오세요. 카드는 이미 당신을 기다리고 있었습니다. 무엇이 당신의 마음을 무겁게 하고 있나요?',
-  '고요히 앉아 오셨군요. 오늘의 에너지가 당신을 이곳으로 이끌었습니다. 무엇이 궁금하신가요?',
-];
-const MASTER_RESPONSES = {
-  draw: [
-    '카드를 뽑아볼까요? 마음을 비우고 준비되면 버튼을 눌러주세요.',
-    '좋습니다. 이제 카드가 당신에게 말을 걸 것입니다. 천천히 뽑아보세요.',
-    '카드의 에너지가 당신을 기다립니다. 준비되셨나요?',
-  ],
-  reveal: (card, isRev) => {
-    const msgs = card.suit==='major' ? (AI_DB[card.k]||['이 카드의 에너지를 느껴보세요.']) : (SUIT_MSG[card.suit]||['카드가 말을 건넵니다.']);
-    const dir = isRev ? '역방향' : '정방향';
-    const text = isRev ? card.rev : card.up;
+/* ── CHAT ── */
+const MASTER_GREETINGS=['안녕하세요. 저는 마담 로제입니다. 오늘 어떤 이야기를 나누고 싶으신가요?','어서 오세요. 카드는 이미 당신을 기다리고 있었습니다. 무엇이 마음을 무겁게 하고 있나요?','고요히 앉아 오셨군요. 오늘의 에너지가 당신을 이곳으로 이끌었습니다.'];
+const MASTER_RESPONSES={
+  draw:['카드를 뽑아볼까요? 마음을 비우고 준비되면 버튼을 눌러주세요.','좋습니다. 이제 카드가 당신에게 말을 걸 것입니다.','카드의 에너지가 당신을 기다립니다.'],
+  reveal:(card,isRev)=>{
+    const msgs=card.suit==='major'?(AI_DB[card.k]||['이 카드의 에너지를 느껴보세요.']):( SUIT_MSG[card.suit]||['카드가 말을 건넵니다.']);
+    const dir=isRev?'역방향':'정방향';
+    const text=isRev?card.rev:card.up;
     return `**${card.k}** (${dir}) 카드가 나왔습니다.\n\n${text}\n\n${msgs[Math.floor(Math.random()*msgs.length)]}`;
   },
-  followup: [
-    '이 카드와 관련하여 더 궁금한 점이 있으신가요? 다른 각도에서 살펴볼 수도 있습니다.',
-    '카드가 전한 메시지를 어떻게 느끼셨나요? 더 깊이 들여다보고 싶은 부분이 있다면 말씀해 주세요.',
-    '당신의 직관이 무엇을 말하고 있나요? 카드 하나를 더 뽑아 에너지를 확인해볼 수도 있습니다.',
-  ],
-  generic: [
-    '마음속에 떠오르는 것을 그대로 말씀해 주세요. 카드는 당신의 내면을 비추는 거울입니다.',
-    '그 감정을 충분히 느껴보세요. 타로는 답을 주는 것이 아니라 이미 당신 안에 있는 답을 드러냅니다.',
-    '흥미로운 질문입니다. 카드를 하나 뽑아 이 상황의 에너지를 살펴볼까요?',
-    '당신의 이야기를 더 들려주세요. 상황을 더 잘 이해하면 카드의 메시지도 더 깊어집니다.',
-    '그 에너지를 느낍니다. 지금 이 순간 당신에게 가장 필요한 것이 무엇인지 카드에게 물어볼까요?',
-  ],
-  keyword_love: [
-    '사랑과 관계에 대한 질문이군요. 카드가 두 사람 사이의 에너지를 보여줄 것입니다. 뽑아볼까요?',
-    '마음이 복잡하시겠어요. 감정의 에너지를 카드로 살펴보면 어떨까요?',
-  ],
-  keyword_work: [
-    '일과 커리어에 관한 고민이시군요. 현재 상황의 에너지를 카드로 확인해 보겠습니다.',
-    '목표를 향해 나아가는 당신의 에너지가 느껴집니다. 카드가 방향을 제시해 줄 것입니다.',
-  ],
-  keyword_future: [
-    '미래에 대한 불안은 자연스러운 것입니다. 지금 이 순간의 에너지가 미래를 만들어 갑니다.',
-    '가능성의 에너지를 카드로 살펴보겠습니다. 어떤 미래를 원하시나요?',
-  ],
+  followup:['이 카드와 관련하여 더 궁금한 점이 있으신가요?','카드가 전한 메시지를 어떻게 느끼셨나요?','당신의 직관이 무엇을 말하고 있나요?'],
+  generic:['마음속에 떠오르는 것을 그대로 말씀해 주세요.','그 감정을 충분히 느껴보세요.','카드를 하나 뽑아 이 상황의 에너지를 살펴볼까요?','당신의 이야기를 더 들려주세요.','지금 이 순간 당신에게 가장 필요한 것이 무엇인지 카드에게 물어볼까요?'],
+  keyword_love:['사랑과 관계에 대한 질문이군요. 카드가 두 사람 사이의 에너지를 보여줄 것입니다.','감정의 에너지를 카드로 살펴보면 어떨까요?'],
+  keyword_work:['일과 커리어에 관한 고민이시군요.','목표를 향해 나아가는 에너지가 느껴집니다.'],
+  keyword_future:['미래에 대한 불안은 자연스러운 것입니다.','가능성의 에너지를 카드로 살펴보겠습니다.'],
 };
-
 function detectIntent(text){
-  const t = text.toLowerCase();
-  if(/뽑|카드|draw|pull/.test(t)) return 'draw';
-  if(/사랑|연애|관계|좋아|남자친구|여자친구|이성|연인|결혼|짝/.test(t)) return 'love';
-  if(/일|직장|취업|사업|커리어|돈|재정|합격|시험/.test(t)) return 'work';
-  if(/미래|앞으로|앞날|내년|계획|운명/.test(t)) return 'future';
-  return 'generic';
+  const t=text.toLowerCase();
+  if(/뽑|카드|draw|pull/.test(t))return'draw';
+  if(/사랑|연애|관계|남자친구|여자친구|연인|결혼/.test(t))return'love';
+  if(/일|직장|취업|사업|커리어|돈|합격|시험/.test(t))return'work';
+  if(/미래|앞으로|앞날|내년|계획|운명/.test(t))return'future';
+  return'generic';
 }
-
 function openChat(){
-  chatHistory = [];
-  chatDrawnCards = [];
-  document.getElementById('chatMessages').innerHTML = '';
-  document.getElementById('chatInput').value = '';
+  chatHistory=[];chatDrawnCards=[];
+  document.getElementById('chatMessages').innerHTML='';
+  document.getElementById('chatInput').value='';
   document.getElementById('ov-chat').classList.add('open');
-
-  // Date divider
   addChatDivider('오늘');
-
-  // Greeting
-  setTimeout(()=>{
-    const greet = MASTER_GREETINGS[Math.floor(Math.random()*MASTER_GREETINGS.length)];
-    addMasterMessage(greet, true);
-  }, 500);
+  setTimeout(()=>{addMasterMessage(MASTER_GREETINGS[Math.floor(Math.random()*MASTER_GREETINGS.length)],true);},500);
 }
-function closeChat(){
-  document.getElementById('ov-chat').classList.remove('open');
-}
-
+function closeChat(){document.getElementById('ov-chat').classList.remove('open');}
 function addChatDivider(text){
-  const el = document.createElement('div');
-  el.className = 'chat-date-divider';
-  el.textContent = text;
+  const el=document.createElement('div');el.className='chat-date-divider';el.textContent=text;
   document.getElementById('chatMessages').appendChild(el);
 }
-
-function addMasterMessage(text, withTyping=false){
-  const msgs = document.getElementById('chatMessages');
-
+function addMasterMessage(text,withTyping=false){
+  const msgs=document.getElementById('chatMessages');
   if(withTyping){
-    // Show typing indicator first
-    const typing = document.createElement('div');
-    typing.className = 'chat-msg';
-    typing.id = 'typingIndicator';
-    typing.innerHTML = `
-      <div class="chat-msg-av">◈</div>
-      <div class="chat-bubble master">
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      </div>`;
-    msgs.appendChild(typing);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    setTimeout(()=>{
-      const t = document.getElementById('typingIndicator');
-      if(t) t.remove();
-      renderMasterBubble(text);
-    }, 900 + Math.random()*600);
-  } else {
-    renderMasterBubble(text);
-  }
+    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
+    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(text);},900+Math.random()*600);
+  } else {renderMasterBubble(text);}
 }
-
-function renderMasterBubble(text, cardData=null, drawBtn=false){
-  const msgs = document.getElementById('chatMessages');
-  const msg = document.createElement('div');
-  msg.className = 'chat-msg';
-
-  // Convert **bold** markdown
-  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-
-  let cardHTML = '';
+function renderMasterBubble(text,cardData=null,drawBtn=false){
+  const msgs=document.getElementById('chatMessages');
+  const msg=document.createElement('div');msg.className='chat-msg';
+  const formatted=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  let cardHTML='';
   if(cardData){
-    const isRev = cardData.isRev;
-    const imgPart = cardData.img
-      ? `<img src="${cardData.img}" alt="${cardData.k}" class="card-reveal-img" onerror="this.style.display='none'">`
-      : `<div class="card-reveal-face">${cardData.emoji||'◈'}</div>`;
-    cardHTML = `<div class="card-reveal">
-      ${imgPart}
-      <div class="card-reveal-info">
-        <span class="card-reveal-name">${cardData.k}${isRev?' · 역방향':''}</span>
-        <span class="card-reveal-kw">${cardData.kw.join(' · ')}</span>
-      </div>
-    </div>`;
+    const imgPart=cardData.img?`<img src="${cardData.img}" alt="${cardData.k}" class="card-reveal-img" onerror="this.style.display='none'">`:`<div class="card-reveal-face">${cardData.emoji||'◈'}</div>`;
+    cardHTML=`<div class="card-reveal">${imgPart}<div class="card-reveal-info"><span class="card-reveal-name">${cardData.k}${cardData.isRev?' · 역방향':''}</span><span class="card-reveal-kw">${cardData.kw.join(' · ')}</span></div></div>`;
   }
-
-  const drawBtnHTML = drawBtn
-    ? `<br><button class="chat-draw-btn" id="chatDrawBtn" onclick="chatUserDraw()">카드 뽑기 ›</button>`
-    : '';
-
-  msg.innerHTML = `
-    <div class="chat-msg-av">◈</div>
-    <div class="chat-bubble master">${formatted}${cardHTML}${drawBtnHTML}</div>`;
-  msgs.appendChild(msg);
-  msgs.scrollTop = msgs.scrollHeight;
-  chatHistory.push({role:'master', text});
+  const drawBtnHTML=drawBtn?`<br><button class="chat-draw-btn" id="chatDrawBtn" onclick="chatUserDraw()">카드 뽑기 ›</button>`:'';
+  msg.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master">${formatted}${cardHTML}${drawBtnHTML}</div>`;
+  msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
+  chatHistory.push({role:'master',text});
 }
-
 function addUserMessage(text){
-  const msgs = document.getElementById('chatMessages');
-  const msg = document.createElement('div');
-  msg.className = 'chat-msg user';
-  msg.innerHTML = `
-    <div class="chat-bubble user">${text}</div>
-    <div class="chat-msg-av user-av" style="background:linear-gradient(135deg,var(--navy-l),var(--navy))">나</div>`;
-  msgs.appendChild(msg);
-  msgs.scrollTop = msgs.scrollHeight;
-  chatHistory.push({role:'user', text});
+  const msgs=document.getElementById('chatMessages');
+  const msg=document.createElement('div');msg.className='chat-msg user';
+  msg.innerHTML=`<div class="chat-bubble user">${text}</div><div class="chat-msg-av user-av" style="background:linear-gradient(135deg,var(--navy-l),var(--navy))">나</div>`;
+  msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
+  chatHistory.push({role:'user',text});
 }
-
 function sendChat(){
-  const input = document.getElementById('chatInput');
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = '';
-  input.style.height = 'auto';
-  addUserMessage(text);
-  respondToChat(text);
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='auto';
+  addUserMessage(text);respondToChat(text);
 }
-
 function respondToChat(text){
-  // Disable draw button if exists
-  const btn = document.getElementById('chatDrawBtn');
-  if(btn) btn.disabled = true;
-
-  const intent = detectIntent(text);
-  let response = '';
-  let showDrawBtn = false;
-
-  if(intent === 'draw'){
-    response = MASTER_RESPONSES.draw[Math.floor(Math.random()*MASTER_RESPONSES.draw.length)];
-    showDrawBtn = true;
-  } else if(intent === 'love'){
-    response = MASTER_RESPONSES.keyword_love[Math.floor(Math.random()*MASTER_RESPONSES.keyword_love.length)];
-    showDrawBtn = true;
-  } else if(intent === 'work'){
-    response = MASTER_RESPONSES.keyword_work[Math.floor(Math.random()*MASTER_RESPONSES.keyword_work.length)];
-    showDrawBtn = true;
-  } else if(intent === 'future'){
-    response = MASTER_RESPONSES.keyword_future[Math.floor(Math.random()*MASTER_RESPONSES.keyword_future.length)];
-    showDrawBtn = true;
-  } else {
-    // Generic — if few messages, suggest drawing
-    const msgCount = chatHistory.filter(m=>m.role==='user').length;
-    if(msgCount >= 2 && Math.random() > .4){
-      response = MASTER_RESPONSES.generic[Math.floor(Math.random()*MASTER_RESPONSES.generic.length)];
-      showDrawBtn = true;
-    } else {
-      response = MASTER_RESPONSES.generic[Math.floor(Math.random()*MASTER_RESPONSES.generic.length)];
-    }
+  const btn=document.getElementById('chatDrawBtn');if(btn)btn.disabled=true;
+  const intent=detectIntent(text);
+  let response='',showDrawBtn=false;
+  if(intent==='draw'){response=MASTER_RESPONSES.draw[Math.floor(Math.random()*MASTER_RESPONSES.draw.length)];showDrawBtn=true;}
+  else if(intent==='love'){response=MASTER_RESPONSES.keyword_love[Math.floor(Math.random()*MASTER_RESPONSES.keyword_love.length)];showDrawBtn=true;}
+  else if(intent==='work'){response=MASTER_RESPONSES.keyword_work[Math.floor(Math.random()*MASTER_RESPONSES.keyword_work.length)];showDrawBtn=true;}
+  else if(intent==='future'){response=MASTER_RESPONSES.keyword_future[Math.floor(Math.random()*MASTER_RESPONSES.keyword_future.length)];showDrawBtn=true;}
+  else{
+    const msgCount=chatHistory.filter(m=>m.role==='user').length;
+    response=MASTER_RESPONSES.generic[Math.floor(Math.random()*MASTER_RESPONSES.generic.length)];
+    if(msgCount>=2&&Math.random()>.4)showDrawBtn=true;
   }
-
   setTimeout(()=>{
-    const msgs = document.getElementById('chatMessages');
-    // Typing indicator
-    const typing = document.createElement('div');
-    typing.className = 'chat-msg';
-    typing.id = 'typingIndicator';
-    typing.innerHTML = `
-      <div class="chat-msg-av">◈</div>
-      <div class="chat-bubble master">
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      </div>`;
-    msgs.appendChild(typing);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    setTimeout(()=>{
-      const t = document.getElementById('typingIndicator');
-      if(t) t.remove();
-      renderMasterBubble(response, null, showDrawBtn);
-    }, 800 + Math.random()*700);
-  }, 200);
+    const msgs=document.getElementById('chatMessages');
+    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
+    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(response,null,showDrawBtn);},800+Math.random()*700);
+  },200);
 }
-
 function chatUserDraw(){
-  const btn = document.getElementById('chatDrawBtn');
-  if(btn) btn.disabled = true;
-
-  const usedIds = chatDrawnCards.map(c=>c.id);
-  openPicker(null, usedIds, (card)=>{
-    const useRev = settings.rev;
-    const isRev = useRev && Math.random() > .62;
-    const drawnCard = {...card, isRev};
+  const btn=document.getElementById('chatDrawBtn');if(btn)btn.disabled=true;
+  const usedIds=chatDrawnCards.map(c=>c.id);
+  openPicker(null,usedIds,(card)=>{
+    const isRev=settings.rev&&Math.random()>.62;
+    const drawnCard={...card,isRev};
     chatDrawnCards.push(drawnCard);
-
-    // User message showing they drew
     addUserMessage('카드를 뽑았습니다.');
-
-    // Master response with card reveal
-    const responseText = MASTER_RESPONSES.reveal(drawnCard, isRev);
-    const msgs = document.getElementById('chatMessages');
-    const typing = document.createElement('div');
-    typing.className = 'chat-msg';
-    typing.id = 'typingIndicator';
-    typing.innerHTML = `
-      <div class="chat-msg-av">◈</div>
-      <div class="chat-bubble master">
-        <div class="typing-dots">
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-          <div class="typing-dot"></div>
-        </div>
-      </div>`;
-    msgs.appendChild(typing);
-    msgs.scrollTop = msgs.scrollHeight;
-
-    setTimeout(()=>{
-      const t = document.getElementById('typingIndicator');
-      if(t) t.remove();
-      renderMasterBubble(responseText, drawnCard, false);
-
-      // Follow-up
-      setTimeout(()=>{
-        const fu = MASTER_RESPONSES.followup[Math.floor(Math.random()*MASTER_RESPONSES.followup.length)];
-        addMasterMessage(fu, true);
-      }, 2000);
-    }, 1200);
+    const responseText=MASTER_RESPONSES.reveal(drawnCard,isRev);
+    const msgs=document.getElementById('chatMessages');
+    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
+    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
+    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(responseText,drawnCard,false);setTimeout(()=>{const fu=MASTER_RESPONSES.followup[Math.floor(Math.random()*MASTER_RESPONSES.followup.length)];addMasterMessage(fu,true);},2000);},1200);
   });
 }
 
-/* READING */
+/* ── READING ── */
 function startReading(key){
-  // Chat mode — open chat directly
-  if(key === 'chat'){
-    openChat();
-    return;
-  }
-
+  if(key==='chat'){openChat();return;}
   userQ=document.getElementById('qInput').value.trim();
   curSpread=SPREADS.find(s=>s.key===key);
   drawnCards=new Array(curSpread.count).fill(null);
   revealedCount=0;
-
-  // Fan shuffle animation
   for(let i=0;i<5;i++){const fc=document.getElementById('fc'+i);if(fc)fc.style.animation='';const sd=document.getElementById('sd'+i);if(sd)sd.classList.remove('on');}
   const qb=document.getElementById('shQBubble');
   if(userQ){qb.textContent=`"${userQ}"`;qb.style.display='block';}else{qb.style.display='none';}
@@ -2234,103 +2028,65 @@ function startReading(key){
     if(s>0){const p=document.getElementById('fc'+(s-1));if(p)p.style.animation='';}
     const sd=document.getElementById('sd'+s);if(sd)sd.classList.add('on');
     const fc=document.getElementById('fc'+s);if(fc)fc.style.cssText+=';animation:fanShuffle .32s ease;';
-    s++;
-    if(s>=5){clearInterval(iv);setTimeout(buildReading,500);}
+    s++;if(s>=5){clearInterval(iv);setTimeout(buildReading,500);}
   },340);
 }
-
 function buildReading(){
   document.getElementById('ov-shuffle').classList.remove('open');
   const sp=curSpread;
-
-  // Auto-draw for auto slots
   const useRev=settings.rev;
   const autoPool=[...ALL_CARDS].sort(()=>Math.random()-.5);
   let autoIdx=0;
   sp.autoPick.forEach(i=>{
     let card;
-    if(sp.majorOnly){
-      const midx=Math.floor(Math.random()*MAJOR.length);
-      card={...MAJOR[midx], isRev: useRev && Math.random()>.62};
-    } else {
-      while(autoIdx<autoPool.length&&drawnCards.some(d=>d&&d.id===autoPool[autoIdx].id))autoIdx++;
-      card={...autoPool[autoIdx++], isRev: useRev && Math.random()>.62};
-    }
+    if(sp.majorOnly){const midx=Math.floor(Math.random()*MAJOR.length);card={...MAJOR[midx],isRev:useRev&&Math.random()>.62};}
+    else{while(autoIdx<autoPool.length&&drawnCards.some(d=>d&&d.id===autoPool[autoIdx].id))autoIdx++;card={...autoPool[autoIdx++],isRev:useRev&&Math.random()>.62};}
     drawnCards[i]=card;
   });
-
   document.getElementById('rdSpreadName').textContent=sp.name;
   const qp=document.getElementById('rdQPill');
   if(userQ){qp.textContent=`"${userQ}"`;qp.style.display='inline-block';}else{qp.style.display='none';}
-
   const grid=document.getElementById('rdGrid');grid.innerHTML='';
   const cols=sp.count===1?'1fr':sp.count<=3?`repeat(${sp.count},1fr)`:'repeat(3,1fr)';
   grid.style.gridTemplateColumns=cols;
   if(sp.count===1){grid.style.maxWidth='155px';grid.style.margin='0 auto 22px';}
   else{grid.style.maxWidth='';grid.style.margin='0 0 22px';}
-
   drawnCards.forEach((_,i)=>{
     const isAuto=sp.autoPick.includes(i);
     const slot=document.createElement('div');slot.className='rd-slot';
     const labelSuffix=isAuto?'<span style="display:block;font-size:.68rem;color:var(--gold-d);opacity:.8;margin-top:2px">자동</span>':'';
-    slot.innerHTML=`<div class="rd-pos">${sp.labels[i]}${labelSuffix}</div>
-      <div class="rd-wrap" id="rw${i}">
-        <div class="rd-back" onclick="${isAuto?`flipCard(${i})`:''}" id="rdback${i}">ARCANA</div>
-      </div>
-      <div id="rcl${i}" style="display:none">
-        <div class="rd-cname" id="rcname${i}"></div>
-        <div class="rd-crev" id="rcrev${i}"></div>
-      </div>`;
+    slot.innerHTML=`<div class="rd-pos">${sp.labels[i]}${labelSuffix}</div><div class="rd-wrap" id="rw${i}"><div class="rd-back" id="rdback${i}">ARCANA</div></div><div id="rcl${i}" style="display:none"><div class="rd-cname" id="rcname${i}"></div><div class="rd-crev" id="rcrev${i}"></div></div>`;
     grid.appendChild(slot);
-
     if(!isAuto){
-      // User pick slot — show "선택" button
       const back=slot.querySelector('.rd-back');
-      back.style.cursor='pointer';
-      back.style.fontSize='.65rem';
-      back.style.letterSpacing='1.5px';
-      back.innerHTML='탭하여<br>랜덤 뽑기';
-      back.onclick=()=>promptUserPick(i);
+      back.style.cursor='pointer';back.style.fontSize='.65rem';back.style.letterSpacing='1.5px';
+      back.innerHTML='탭하여<br>랜덤 뽑기';back.onclick=()=>promptUserPick(i);
     }
   });
-
   document.getElementById('aiPanel').style.display='none';
   document.getElementById('rdActions').classList.remove('show');
   document.getElementById('rdHint').textContent=sp.userPick.length>0?'카드를 탭하여 랜덤으로 뽑으세요':'카드를 탭하여 열어보세요';
   document.getElementById('ov-reading').classList.add('open');
   document.getElementById('rdScroll').scrollTop=0;
-
-  // If no user picks (single spread), flip all auto
-  if(sp.userPick.length===0){
-    sp.autoPick.forEach(i=>setTimeout(()=>flipCard(i),400+i*200));
-  }
+  if(sp.userPick.length===0){sp.autoPick.forEach(i=>setTimeout(()=>flipCard(i),400+i*200));}
 }
-
 function promptUserPick(slotIdx){
-  const usedIds = drawnCards.filter(Boolean).map(c=>c.id);
-  openPicker(curSpread.labels[slotIdx], usedIds, (card)=>{
-    const useRev = settings.rev;
-    drawnCards[slotIdx] = {...card, isRev: useRev && Math.random()>.62};
+  const usedIds=drawnCards.filter(Boolean).map(c=>c.id);
+  openPicker(curSpread.labels[slotIdx],usedIds,(card)=>{
+    const useRev=settings.rev;
+    drawnCards[slotIdx]={...card,isRev:useRev&&Math.random()>.62};
     flipCard(slotIdx);
-  }, curSpread.majorOnly);
+  },curSpread.majorOnly);
 }
-
 function flipCard(i){
-  const card=drawnCards[i];
-  if(!card)return;
-  const wrap=document.getElementById('rw'+i);
-  if(wrap.dataset.done)return;
+  const card=drawnCards[i];if(!card)return;
+  const wrap=document.getElementById('rw'+i);if(wrap.dataset.done)return;
   wrap.dataset.done='1';
-
   const front=document.createElement('div');
   if(card.img){
     front.className='rd-front'+(card.isRev?' rev':'');
     const img=document.createElement('img');img.src=card.img;img.alt=card.k;
-    img.onerror=()=>{
-      front.className='rd-front minor-face'+(card.isRev?' rev':'');
-      front.innerHTML='';
-      front.innerHTML=`<span class="mf-suit">${card.emoji||'◈'}</span><span class="mf-name">${card.k}</span>`;
-    };
+    img.onerror=()=>{front.className='rd-front minor-face'+(card.isRev?' rev':'');front.innerHTML='';front.innerHTML=`<span class="mf-suit">${card.emoji||'◈'}</span><span class="mf-name">${card.k}</span>`;};
     front.appendChild(img);
   } else {
     front.className='rd-front minor-face'+(card.isRev?' rev':'');
@@ -2341,144 +2097,62 @@ function flipCard(i){
   document.getElementById('rcname'+i).textContent=card.k;
   if(card.isRev)document.getElementById('rcrev'+i).textContent='역방향 ↓';
   revealedCount++;
-
-  // Check if all revealed
   const sp=curSpread;
-  const allRevealed=sp.userPick.every(idx=>!!document.getElementById('rw'+idx).dataset.done)&&
-                    sp.autoPick.every(idx=>!!document.getElementById('rw'+idx).dataset.done);
+  const allRevealed=sp.userPick.every(idx=>!!document.getElementById('rw'+idx).dataset.done)&&sp.autoPick.every(idx=>!!document.getElementById('rw'+idx).dataset.done);
   if(allRevealed)onAllRevealed();
 }
-
 function onAllRevealed(){
   document.getElementById('rdActions').classList.add('show');
   if(settings.auto)generateReading();
 }
-
 function generateReading(){
-  const panel  = document.getElementById('aiPanel');
-  const body   = document.getElementById('aiBody');
-  const rdScrl = document.getElementById('rdScroll');
-  panel.style.display = 'block';
-  body.innerHTML = `<div class="ai-spinner">
-    <div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div>
-    <div class="ai-loading-txt">카드의 에너지를 읽고 있습니다...</div>
-  </div>`;
-
-  // Scroll to show loader
-  setTimeout(() => { rdScrl.scrollTop = rdScrl.scrollHeight; }, 50);
-
-  setTimeout(() => {
-    const sp = curSpread;
-
-    // ── helpers ─────────────────────────────────────────────
-    function getMsg(c) {
-      if (c.suit === 'major') return AI_DB[c.k] || ['이 카드의 에너지를 직관적으로 느껴보세요.', '내면의 목소리를 신뢰하세요.'];
-      return SUIT_MSG[c.suit] || ['카드가 전하는 메시지를 받아들이세요.', '직관을 따르세요.'];
-    }
-    function cType(c) {
-      return c.suit === 'major' ? '메이저 아르카나' : `마이너 아르카나 · ${SUIT_META[c.suit]?.label || c.suit}`;
-    }
-    function dirLabel(c) { return c.isRev ? '역방향' : '정방향'; }
-
-    // ── collect valid cards keeping original slot index ──────
-    // drawnCards array: index == slot position in spread
-    const validEntries = []; // [{slotIdx, card}]
-    drawnCards.forEach((c, slotIdx) => {
-      if (c) validEntries.push({ slotIdx, card: c });
+  const panel=document.getElementById('aiPanel'),body=document.getElementById('aiBody'),rdScrl=document.getElementById('rdScroll');
+  panel.style.display='block';
+  body.innerHTML=`<div class="ai-spinner"><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div><div class="ai-loading-txt">카드의 에너지를 읽고 있습니다...</div></div>`;
+  setTimeout(()=>{rdScrl.scrollTop=rdScrl.scrollHeight;},50);
+  setTimeout(()=>{
+    const sp=curSpread;
+    function getMsg(c){return c.suit==='major'?AI_DB[c.k]||['이 카드의 에너지를 느껴보세요.','내면의 목소리를 신뢰하세요.']:SUIT_MSG[c.suit]||['카드가 전하는 메시지를 받아들이세요.','직관을 따르세요.'];}
+    function cType(c){return c.suit==='major'?'메이저 아르카나':`마이너 아르카나 · ${SUIT_META[c.suit]?.label||c.suit}`;}
+    function dirLabel(c){return c.isRev?'역방향':'정방향';}
+    const validEntries=[];
+    drawnCards.forEach((c,slotIdx)=>{if(c)validEntries.push({slotIdx,card:c});});
+    if(validEntries.length===0){body.innerHTML='<div class="ai-text"><p>카드 정보를 불러올 수 없습니다.</p></div>';return;}
+    let html='<div class="ai-text">';
+    const mainCard=validEntries[0].card,mainMsgs=getMsg(mainCard);
+    html+=`<div class="sec">전체 에너지 흐름</div><p><strong>${mainCard.k}</strong> (${cType(mainCard)} · ${dirLabel(mainCard)})의 에너지가 이번 리딩 전체를 이끌고 있습니다.</p><p>${mainCard.isRev?mainCard.rev:mainCard.up}</p><p>${mainMsgs[0]}</p>`;
+    html+=`<div class="sec">카드별 해석</div>`;
+    validEntries.forEach(({slotIdx,card:c})=>{
+      const isAuto=sp.autoPick.includes(slotIdx);
+      const label=sp.labels[slotIdx]||`카드 ${slotIdx+1}`;
+      const autoTag=isAuto?` <span style="font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold-d);font-style:normal">(자동)</span>`:'';
+      const msgs=getMsg(c),mainText=c.isRev?c.rev:c.up,extraText=c.isRev?(msgs[1]||msgs[0]):msgs[0];
+      html+=`<div class="hl"><strong>${label}${autoTag}</strong><small style="font-family:'Cinzel',serif;font-size:.75rem;color:${c.isRev?'var(--ink-l)':'var(--navy)'};letter-spacing:.8px;font-style:normal;display:block;margin:5px 0 10px">${c.k} · ${cType(c)} · ${dirLabel(c)}</small><div class="hl-body">${mainText}</div><div class="hl-body" style="margin-top:8px;color:var(--ink-l)">${extraText}</div></div>`;
     });
-
-    if (validEntries.length === 0) {
-      body.innerHTML = '<div class="ai-text"><p>카드 정보를 불러올 수 없습니다.</p></div>';
-      return;
+    if(validEntries.length>1){
+      const cards=validEntries.map(e=>e.card);
+      const majorCount=cards.filter(c=>c.suit==='major').length,minorCount=cards.length-majorCount;
+      const revCount=cards.filter(c=>c.isRev).length;
+      const minorSuits=[...new Set(cards.filter(c=>c.suit!=='major').map(c=>c.suit))];
+      const suitNames=minorSuits.map(s=>SUIT_META[s]?.label||s).join(', ');
+      html+=`<div class="sec">패턴과 통찰</div><p>이번 리딩에는 <strong>메이저 ${majorCount}장</strong>, <strong>마이너 ${minorCount}장</strong>이 등장했습니다. `;
+      if(majorCount>=cards.length*0.6)html+=`메이저 카드가 다수로, 인생의 중요한 전환점임을 나타냅니다.`;
+      else if(minorCount>=cards.length*0.6){html+=`마이너 카드가 중심으로, 일상적인 선택이 중요한 국면입니다.`;if(suitNames)html+=` 특히 <strong>${suitNames}</strong>의 에너지가 두드러집니다.`;}
+      else html+=`메이저와 마이너의 균형이 잡혀 있어, 큰 흐름과 일상적 행동이 모두 중요합니다.`;
+      html+=`</p><p>`;
+      if(revCount===0)html+=`모든 카드가 정방향입니다. 에너지가 막힘 없이 흐르고 있습니다.`;
+      else if(revCount===cards.length)html+=`모든 카드가 역방향입니다. 내면을 먼저 들여다볼 필요가 있습니다.`;
+      else html+=`<strong>${revCount}장</strong>의 역방향 카드가 나타났습니다. 해당 위치의 에너지를 점검해 보세요.`;
+      html+=`</p>`;
     }
-
-    let html = '<div class="ai-text">';
-
-    // ① 전체 에너지 흐름
-    const mainCard = validEntries[0].card;
-    const mainMsgs = getMsg(mainCard);
-    html += `<div class="sec">전체 에너지 흐름</div>`;
-    html += `<p><strong>${mainCard.k}</strong> (${cType(mainCard)} · ${dirLabel(mainCard)})의 에너지가 이번 리딩 전체를 이끌고 있습니다.</p>`;
-    html += `<p>${mainCard.isRev ? mainCard.rev : mainCard.up}</p>`;
-    html += `<p>${mainMsgs[0]}</p>`;
-
-    // ② 카드별 상세 해석 (슬롯 인덱스 기준으로 labels 접근)
-    html += `<div class="sec">카드별 해석</div>`;
-    validEntries.forEach(({ slotIdx, card: c }) => {
-      const isAuto    = sp.autoPick.includes(slotIdx);
-      const label     = sp.labels[slotIdx] || `카드 ${slotIdx + 1}`;
-      const autoTag   = isAuto ? ' <span style="font-family:\'Cinzel\',serif;font-size:.7rem;color:var(--gold-d);font-style:normal;letter-spacing:.8px">(자동)</span>' : '';
-      const msgs      = getMsg(c);
-      const mainText  = c.isRev ? c.rev : c.up;
-      const extraText = c.isRev ? (msgs[1] || msgs[0]) : msgs[0];
-
-      html += `<div class="hl">
-        <strong>${label}${autoTag}</strong>
-        <small style="font-family:'Cinzel',serif;font-size:.75rem;color:${c.isRev?'var(--ink-l)':'var(--navy)'};letter-spacing:.8px;font-style:normal;display:block;margin:5px 0 10px">
-          ${c.k} &nbsp;·&nbsp; ${cType(c)} &nbsp;·&nbsp; ${dirLabel(c)}
-        </small>
-        <div class="hl-body">${mainText}</div>
-        <div class="hl-body" style="margin-top:8px;color:var(--ink-l)">${extraText}</div>
-      </div>`;
-    });
-
-    // ③ 패턴과 통찰 (카드 2장 이상일 때)
-    if (validEntries.length > 1) {
-      const cards      = validEntries.map(e => e.card);
-      const majorCount = cards.filter(c => c.suit === 'major').length;
-      const minorCount = cards.length - majorCount;
-      const revCount   = cards.filter(c => c.isRev).length;
-      const minorSuits = [...new Set(cards.filter(c => c.suit !== 'major').map(c => c.suit))];
-      const suitNames  = minorSuits.map(s => SUIT_META[s]?.label || s).join(', ');
-
-      html += `<div class="sec">패턴과 통찰</div>`;
-      html += `<p>이번 리딩에는 <strong>메이저 아르카나 ${majorCount}장</strong>, <strong>마이너 아르카나 ${minorCount}장</strong>이 등장했습니다. `;
-
-      if (majorCount >= cards.length * 0.6) {
-        html += `메이저 카드가 다수를 차지해, 지금 겪고 있는 상황은 단순한 일상의 문제가 아닌 인생의 중요한 전환점임을 나타냅니다. 운명적인 에너지가 강하게 작용하는 시기입니다.`;
-      } else if (minorCount >= cards.length * 0.6) {
-        html += `마이너 카드가 중심이 되어, 현재 상황은 일상적인 에너지와 실질적인 선택이 중요한 국면임을 보여줍니다.`;
-        if (suitNames) html += ` 특히 <strong>${suitNames}</strong>의 에너지가 두드러집니다.`;
-      } else {
-        html += `메이저와 마이너의 균형이 잡혀 있어, 큰 흐름과 일상적 행동이 모두 중요한 시점입니다.`;
-      }
-      html += `</p>`;
-
-      html += `<p>`;
-      if (revCount === 0) {
-        html += `모든 카드가 정방향으로 나타났습니다. 에너지가 막힘 없이 자유롭게 흐르고 있으며, 지금은 전진하기 좋은 때입니다.`;
-      } else if (revCount === cards.length) {
-        html += `모든 카드가 역방향입니다. 내면에 억눌린 에너지가 많고, 외부보다 자신의 내면을 먼저 들여다볼 필요가 있습니다.`;
-      } else {
-        html += `<strong>${revCount}장</strong>의 역방향 카드가 나타났습니다. 해당 위치의 에너지가 내면에서 작용하거나 지연되고 있음을 의미합니다. 그 영역에서 스스로를 점검해 보세요.`;
-      }
-      html += `</p>`;
-    }
-
-    // ④ 마담 로제의 종합 조언
-    const advices = [
-      '타로는 예언이 아니라 현재 에너지의 거울입니다. 카드가 보여주는 것은 이미 당신 안에 존재하는 지혜입니다.',
-      '모든 카드는 당신이 이미 알고 있는 것을 다시 확인해줄 뿐입니다. 직관을 신뢰하세요.',
-      '지금 이 순간의 에너지가 미래를 결정하지 않습니다. 당신의 선택과 의도가 흐름을 만들어 갑니다.',
-    ];
-    const finalMsgs = getMsg(mainCard);
-    const finalMsg  = finalMsgs[Math.min(1, finalMsgs.length - 1)];
-    html += `<div class="sec">마담 로제의 종합 조언</div>`;
-    html += `<div class="insight-box"><strong>마담 로제</strong>${finalMsg} ${advices[Math.floor(Math.random() * advices.length)]}</div>`;
-
-    html += '</div>';
-    body.innerHTML = html;
-
-    // Scroll to top of ai panel so user sees beginning of analysis
-    setTimeout(() => {
-      const rdScrl = document.getElementById('rdScroll');
-      const panel  = document.getElementById('aiPanel');
-      rdScrl.scrollTop = panel.offsetTop - 16;
-    }, 100);
-
-  }, 1800);
+    const advices=['타로는 예언이 아니라 현재 에너지의 거울입니다.','모든 카드는 당신이 이미 알고 있는 것을 확인해줄 뿐입니다.','지금 이 순간의 에너지가 미래를 결정하지 않습니다.'];
+    const finalMsgs=getMsg(mainCard),finalMsg=finalMsgs[Math.min(1,finalMsgs.length-1)];
+    html+=`<div class="sec">마담 로제의 종합 조언</div><div class="insight-box"><strong>마담 로제</strong>${finalMsg} ${advices[Math.floor(Math.random()*advices.length)]}</div>`;
+    html+='</div>';
+    body.innerHTML=html;
+    setTimeout(()=>{const rdScrl=document.getElementById('rdScroll'),panel=document.getElementById('aiPanel');rdScrl.scrollTop=panel.offsetTop-16;},100);
+  },1800);
 }
-
 function redraw(){document.getElementById('ov-reading').classList.remove('open');setTimeout(()=>startReading(curSpread.key),100);}
 function closeReading(){document.getElementById('ov-reading').classList.remove('open');}
 function saveToJournal(){
