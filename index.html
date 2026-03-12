@@ -2020,112 +2020,528 @@ function cancelPicker(){
 
 /* ── CHAT ── */
 const MASTER_GREETINGS=['안녕하세요. 저는 마담 로제입니다. 오늘 어떤 이야기를 나누고 싶으신가요?','어서 오세요. 카드는 이미 당신을 기다리고 있었습니다. 무엇이 마음을 무겁게 하고 있나요?','반갑습니다. 오늘의 에너지가 당신을 이곳으로 이끌었습니다.'];
-const MASTER_RESPONSES={
-  draw:['카드를 선택해볼까요? 마음을 비우고 준비되면 버튼을 눌러주세요.','좋습니다. 이제 카드가 당신에게 말을 걸 것입니다.','카드의 에너지가 당신을 기다립니다.'],
-  reveal:(card,isRev)=>{
-    const msgs=card.suit==='major'?(AI_DB[card.k]||['이 카드의 에너지를 느껴보세요.']):( SUIT_MSG[card.suit]||['카드가 말을 건넵니다.']);
-    const dir=isRev?'역방향':'정방향';
-    const text=isRev?card.rev:card.up;
-    return `**${card.k}** (${dir}) 카드가 나왔습니다.\n\n${text}\n\n${msgs[Math.floor(Math.random()*msgs.length)]}`;
-  },
-  followup:['이 카드와 관련하여 더 궁금한 점이 있으신가요?','카드가 전한 메시지를 어떻게 느끼셨나요?','당신의 직관이 무엇을 말하고 있나요?'],
-  generic:['마음속에 떠오르는 것을 그대로 말씀해 주세요.','그 감정을 충분히 느껴보세요.','카드를 하나 선택하여 이 상황의 에너지를 살펴볼까요?','당신의 이야기를 더 들려주세요.','지금 이 순간 당신에게 가장 필요한 것이 무엇인지 카드에게 물어볼까요?'],
-  keyword_love:['사랑과 관계에 대한 질문이군요. 카드가 두 사람 사이의 에너지를 보여줄 것입니다.','감정의 에너지를 카드로 살펴보면 어떨까요?'],
-  keyword_work:['일과 커리어에 관한 고민이시군요.','목표를 향해 나아가는 에너지가 느껴집니다.'],
-  keyword_future:['미래에 대한 불안은 자연스러운 것입니다.','가능성의 에너지를 카드로 살펴보겠습니다.'],
+
+const TOPIC_PATTERNS = {
+  love:         /사랑|연애|남자친구|여자친구|남친|여친|썸|짝사랑|고백|이별|헤어|재회|결혼|프로포즈|연인|좋아하는 사람|관계가 어색|연락이 없|마음을 모르겠/,
+  work:         /일|직장|취업|이직|사업|커리어|직업|알바|아르바이트|프리랜서|승진|상사|동료|팀장|면접|합격|불합격|월급|연봉|퇴사|창업/,
+  money:        /돈|재정|빚|대출|투자|주식|저축|경제|재산|부동산|수입|지출|부채|재테크/,
+  future:       /미래|앞으로|앞날|내년|올해|계획|방향|진로|어떻게 될|어떻게 해야|결정|선택|갈림길/,
+  self:         /나 자신|자존감|자신감|우울|불안|외로|혼자|정체성|내가 누구|삶의 의미|의욕|에너지|번아웃|지쳐|힘들|슬퍼|무기력/,
+  relationship: /가족|부모|엄마|아빠|형제|자매|친구|지인|인간관계|갈등|싸움|다툼|오해|화해|소원해진|멀어진/,
+  health:       /건강|몸|아프|병|치료|운동|다이어트|수면|스트레스|체력|피로|회복/,
 };
-function detectIntent(text){
-  const t=text.toLowerCase();
-  if(/뽑|카드|draw|pull/.test(t))return'draw';
-  if(/사랑|연애|관계|남자친구|여자친구|연인|결혼/.test(t))return'love';
-  if(/일|직장|취업|사업|커리어|돈|합격|시험/.test(t))return'work';
-  if(/미래|앞으로|앞날|내년|계획|운명/.test(t))return'future';
-  return'generic';
+
+const EMOTION_PATTERNS = {
+  anxious:  /불안|걱정|두려|무섭|긴장|초조|어떡해|어쩌지|망하면|실패하면/,
+  negative: /힘들|슬퍼|우울|지쳐|포기|싫|최악|절망|안 될 것|안될것/,
+  hopeful:  /기대|설레|잘 될|잘될|희망|좋아질|해보고 싶|도전|변하고 싶/,
+  positive: /좋아|행복|감사|기뻐|잘 되고|잘되고/,
+  confused: /헷갈|복잡|뒤죽박죽|정리가 안|혼란|어떻게 해야/,
+};
+
+const DEEP_QUESTIONS = {
+  love: [
+    '지금 그 관계에서 가장 불확실하게 느껴지는 부분이 무엇인가요?',
+    '상대방과의 관계에서 당신이 가장 원하는 것은 무엇인가요?',
+    '이 상황이 해결된다면 어떤 모습이길 바라세요?',
+    '마음속으로는 어떻게 하고 싶은지 이미 알고 계신가요?',
+  ],
+  work: [
+    '지금 가장 막히는 지점이 외부 상황인가요, 아니면 내면의 확신인가요?',
+    '이 고민을 언제부터 갖고 계셨나요?',
+    '이상적으로 1년 후 어떤 상황에 있고 싶으세요?',
+    '지금 당장 결정을 내려야 한다면 어느 쪽으로 기울어지나요?',
+  ],
+  money: [
+    '이 재정적 고민이 다른 삶의 영역에도 영향을 주고 있나요?',
+    '단기적 해결이 필요한가요, 장기적 방향을 보고 싶으신가요?',
+  ],
+  future: [
+    '여러 선택지 중 어느 쪽이 더 마음에 걸리나요?',
+    '결정을 망설이게 하는 가장 큰 이유가 무엇인가요?',
+    '주변의 기대와 내 진심이 다른가요?',
+  ],
+  self: [
+    '지금 이 감정이 언제부터 시작됐나요?',
+    '지금 가장 필요한 것이 위로인가요, 방향인가요?',
+    '스스로에 대해 가장 바꾸고 싶은 것이 있다면요?',
+  ],
+  relationship: [
+    '그 관계에서 당신이 가장 상처받은 부분이 무엇인가요?',
+    '상대방에게 바라는 것이 구체적으로 있으신가요?',
+    '관계를 회복하고 싶으신가요, 아니면 정리하고 싶으신가요?',
+  ],
+  health: [
+    '몸과 마음 중 어느 쪽이 더 힘드신가요?',
+    '건강 문제가 일상에 어떤 영향을 주고 있나요?',
+  ],
+  generic: [
+    '지금 이 상황에서 가장 원하는 것이 무엇인가요?',
+    '카드에게 가장 물어보고 싶은 것을 한 문장으로 말씀해 주시겠어요?',
+    '지금 느끼는 감정을 한 단어로 표현한다면요?',
+  ],
+};
+
+const CARD_LAYOUTS = {
+  love: [
+    { label: '현재 두 사람의 에너지', question: '지금 이 관계를 둘러싼 에너지' },
+    { label: '상대방의 내면', question: '상대방이 느끼는 감정과 생각' },
+    { label: '관계의 방향', question: '이 관계가 나아갈 흐름' },
+  ],
+  work: [
+    { label: '현재 상황의 핵심', question: '지금 당신의 커리어 에너지' },
+    { label: '장애물', question: '극복해야 할 과제' },
+    { label: '나아갈 방향', question: '취해야 할 행동' },
+  ],
+  money: [
+    { label: '현재 재정 에너지', question: '지금 돈의 흐름' },
+    { label: '조언', question: '취해야 할 현실적 행동' },
+  ],
+  future: [
+    { label: '현재의 나', question: '지금 당신이 있는 지점' },
+    { label: '흐름', question: '자연스럽게 이어지는 방향' },
+    { label: '결과', question: '현재 선택이 만들어 낼 미래' },
+  ],
+  self: [
+    { label: '내면의 목소리', question: '당신의 무의식이 말하는 것' },
+    { label: '지금 필요한 것', question: '지금 이 순간 당신에게 필요한 에너지' },
+  ],
+  relationship: [
+    { label: '나의 에너지', question: '이 관계에서 당신이 투영하는 것' },
+    { label: '상대의 에너지', question: '상대방이 이 관계에 가져오는 것' },
+    { label: '해결의 열쇠', question: '관계를 변화시킬 핵심' },
+  ],
+  health: [
+    { label: '현재 몸과 마음의 에너지', question: '지금 당신의 컨디션' },
+    { label: '회복의 열쇠', question: '지금 필요한 것' },
+  ],
+  generic: [
+    { label: '현재', question: '지금 이 상황의 에너지' },
+    { label: '조언', question: '마담 로제의 조언' },
+  ],
+};
+
+let chatSession = {
+  stage: 'idle', topic: null, subTopic: null,
+  concern: '', keywords: [], questionCount: 0, userTurnCount: 0,
+  followupCount: 0, drawnCards: [], emotionTone: null, readingComplete: false,
+};
+
+function detectTopic(text) {
+  for (const [topic, pattern] of Object.entries(TOPIC_PATTERNS)) {
+    if (pattern.test(text)) return topic;
+  }
+  return 'generic';
 }
-function openChat(){
-  chatHistory=[];chatDrawnCards=[];
-  document.getElementById('chatMessages').innerHTML='';
-  document.getElementById('chatInput').value='';
+
+function detectEmotion(text) {
+  for (const [tone, pattern] of Object.entries(EMOTION_PATTERNS)) {
+    if (pattern.test(text)) return tone;
+  }
+  return null;
+}
+
+function extractKeywords(text) {
+  const stopwords = ['이것','그것','저것','하지만','그래서','그러나','있어','없어','했어','할게','하고','싶어','같아','같은','이런','저런','그런'];
+  const words = text.match(/[가-힣]{2,6}/g) || [];
+  const result = [];
+  words.forEach(w => { if (!stopwords.includes(w) && !result.includes(w)) result.push(w); });
+  return result.slice(0, 5);
+}
+
+function buildEmpathyResponse(text, topic, emotion) {
+  const emotionPrefixes = {
+    anxious:  '그 불안함이 느껴집니다. 쉽지 않은 마음을 가지고 이곳을 찾아오셨군요.',
+    negative: '많이 힘드셨겠어요. 그 무게를 충분히 느끼고 있습니다.',
+    hopeful:  '좋은 에너지가 느껴집니다. 그 기대와 설렘을 카드와 함께 살펴봐요.',
+    positive: '밝은 에너지가 전해집니다.',
+    confused: '복잡하게 얽혀 있는 감정이 느껴지네요. 차근차근 풀어가 봐요.',
+  };
+  const topicIntros = {
+    love:         '사랑과 관계에 대한 이야기군요.',
+    work:         '일과 커리어에 관한 고민이시군요.',
+    money:        '재정적인 부분에 대한 고민이시군요.',
+    future:       '앞날에 대한 고민을 가져오셨군요.',
+    self:         '자신에 대한 이야기를 나누고 싶으시군요.',
+    relationship: '소중한 관계에 대한 이야기군요.',
+    health:       '몸과 마음의 건강에 대한 이야기군요.',
+    generic:      '카드를 선택하기에 앞서,',
+  };
+  const prefix = emotion ? emotionPrefixes[emotion] + ' ' : '';
+  const intro = topicIntros[topic] || topicIntros.generic;
+  return prefix + intro;
+}
+
+function getNextQuestion() {
+  const pool = DEEP_QUESTIONS[chatSession.topic] || DEEP_QUESTIONS.generic;
+  return pool[chatSession.questionCount % pool.length];
+}
+
+function buildReadingProposal() {
+  const layout = CARD_LAYOUTS[chatSession.topic] || CARD_LAYOUTS.generic;
+  const cardCount = layout.length;
+  const topicLabel = {
+    love:'관계', work:'커리어', money:'재정',
+    future:'앞날', self:'내면', relationship:'관계', health:'건강', generic:'상황',
+  }[chatSession.topic] || '상황';
+  const concern = chatSession.keywords.slice(0, 2).join(', ');
+  const concernPart = concern ? `**${concern}**에 대해 ` : '';
+  const proposals = [
+    `${concernPart}${cardCount}장의 카드로 ${topicLabel}의 에너지를 살펴보겠습니다. 마음을 비우고 준비가 되시면 카드를 선택해 주세요.`,
+    `이야기를 들으니 ${topicLabel}의 에너지를 좀 더 깊이 들여다볼 필요가 있겠어요. ${cardCount}장의 카드가 당신에게 말을 걸 것입니다.`,
+    `카드가 ${concernPart}명확한 방향을 보여줄 것입니다. ${cardCount}장을 차례로 선택해 주세요.`,
+  ];
+  return proposals[chatSession.drawnCards.length % proposals.length];
+}
+
+function buildFollowupResponse(text) {
+  const isPositive    = /맞아|그래|그렇|공감|맞는|정확|신기|맞네|진짜|ㅇㅇ|응|넹|넵/.test(text);
+  const isNegative    = /아니|아닌데|틀린|다른|이상한|별로|글쎄/.test(text);
+  const isQuestion    = /\?|왜|어떻게|언제|무엇|뭐가|어디|알려|설명/.test(text);
+  const wantsMore     = /더|추가|한 장|또|다시|재|한번더/.test(text);
+  const wantsEnd      = /고마|감사|됐어|끝|괜찮|알겠|충분|마칠|닫/.test(text);
+  const isMeaningless = text.length < 3 || /^[ㅋㅎㅠㅜㄷㅇㅂ]+$/.test(text) || /^(ㅋ+|ㅎ+|\.+|!+|\s+)$/.test(text);
+
+  chatSession.followupCount = (chatSession.followupCount || 0) + 1;
+
+  if (wantsEnd || chatSession.followupCount >= 3) {
+    chatSession.stage = 'closed';
+    return '오늘 함께한 리딩이 작은 빛이 되었으면 합니다. 타로는 답을 주는 것이 아니라, 당신이 이미 알고 있는 것을 비춰줄 뿐이에요. 언제든 또 찾아오세요. ✦';
+  }
+
+  if (isMeaningless) {
+    return '마음이 정리되지 않으셨나요? 더 궁금한 것이 있으시면 말씀해 주세요. 카드를 추가로 뽑아볼 수도 있어요.';
+  }
+
+  if (wantsMore && chatSession.drawnCards.length < 4) {
+    chatSession.stage = 'drawing';
+    return '한 장을 더 뽑아볼게요. 이번엔 **지금 당신에게 가장 필요한 에너지**에 집중하며 선택해 주세요.';
+  }
+
+  if (isQuestion) {
+    if (chatSession.drawnCards.length < 4) {
+      chatSession.stage = 'drawing';
+      return '그 질문을 카드에게 직접 물어볼까요? 한 장을 더 뽑아 그 답을 찾아보겠습니다.';
+    }
+    return '카드는 이미 충분한 에너지를 보여주었어요. 그 답은 당신 안에 있습니다. 오늘 하루 카드의 메시지를 마음에 품고 지내보세요.';
+  }
+
+  if (isNegative) {
+    return '카드의 해석이 지금 감각과 다를 수 있어요. 타로는 가능성의 에너지를 보여줄 뿐, 정답이 아니니까요. 다른 각도에서 한 장 더 뽑아볼까요?';
+  }
+
+  if (isPositive) {
+    chatSession.stage = 'closed';
+    return '그 공명이 오늘의 답입니다. 카드가 말한 방향을 믿고, 작은 것 하나부터 시작해 보세요. 오늘 리딩을 마무리할게요. ✦';
+  }
+
+  if (chatSession.drawnCards.length < 3) {
+    chatSession.stage = 'drawing';
+    return '이야기를 들으니 한 장의 카드가 더 필요할 것 같아요. 준비되시면 선택해 주세요.';
+  }
+
+  chatSession.stage = 'closed';
+  return '오늘의 에너지를 충분히 살펴본 것 같아요. 카드가 보여준 방향을 오늘 하루 가슴에 담아두세요. 언제든 또 찾아오세요. ✦';
+}
+
+function buildClosingMessage() {
+  const cards = chatSession.drawnCards;
+  const topic = chatSession.topic;
+  const revCount = cards.filter(c => c.isRev).length;
+  const concern = chatSession.keywords.slice(0, 2).join(' ');
+  const closings = {
+    love: revCount > 0
+      ? `${concern ? concern + '에 대한 ' : ''}관계 안에 아직 정리되지 않은 감정이 있습니다. 카드는 지금 당장의 답보다 내면을 먼저 돌아보라고 말하고 있어요. 오늘 하루 자신에게 솔직해지는 시간을 가져보세요.`
+      : `${concern ? concern + '에 대해 ' : ''}카드의 에너지가 열려 있습니다. 지금 이 흐름을 믿고 한 발 내딛는 것이 중요합니다.`,
+    work:         '커리어의 흐름이 보입니다. 카드가 말하는 방향을 오늘 작은 행동 하나로 연결해 보세요.',
+    future:       '앞날은 고정된 것이 아닙니다. 지금 당신의 선택이 그 미래를 만들어가고 있습니다.',
+    self:         '카드는 당신이 이미 알고 있는 것을 보여주었습니다. 내면의 목소리를 더 신뢰해도 좋습니다.',
+    relationship: '관계는 언제나 두 에너지의 만남입니다. 먼저 당신 자신을 돌보는 것에서 시작해 보세요.',
+    health:       '몸과 마음은 연결되어 있습니다. 카드가 말하는 회복의 에너지를 천천히 받아들여 보세요.',
+    generic:      '카드가 지금 당신에게 필요한 에너지를 보여주었습니다. 이 메시지를 오늘 하루 가슴에 담아두세요.',
+  };
+  return (closings[topic] || closings.generic) + '\n\n더 궁금한 점이 있으신가요?';
+}
+
+function interpretCardCombo(cards, topic) {
+  if (cards.length < 2) return null;
+  const revCount = cards.filter(c => c.isRev).length;
+  const suits = cards.map(c => c.suit);
+  const majorCount = suits.filter(s => s === 'major').length;
+  let insight = '';
+  if (majorCount === cards.length) {
+    insight += '모든 카드가 메이저 아르카나입니다. 지금 당신이 마주한 상황은 삶의 중요한 전환점과 연결되어 있습니다. ';
+  } else if (majorCount >= 2) {
+    insight += '큰 에너지의 흐름이 감지됩니다. ';
+  }
+  if (revCount === 0) {
+    insight += '에너지가 모두 열려 있어 지금은 행동하기 좋은 시기입니다.';
+  } else if (revCount === cards.length) {
+    insight += '에너지가 내면으로 향하고 있습니다. 외부 행동보다 내면 정리가 먼저입니다.';
+  } else {
+    insight += `${cards.length}장 중 ${revCount}장이 역방향입니다. 일부 에너지가 막혀 있어 내면의 저항을 살펴볼 필요가 있습니다.`;
+  }
+  const suitCounts = {};
+  suits.forEach(s => { suitCounts[s] = (suitCounts[s] || 0) + 1; });
+  const dominant = Object.entries(suitCounts).sort((a, b) => b[1] - a[1])[0];
+  if (dominant[1] >= 2 && dominant[0] !== 'major') {
+    const suitMsgs = {
+      cups:      ' 감정과 관계의 에너지가 이 상황을 지배하고 있습니다.',
+      wands:     ' 열정과 행동력이 이 상황의 핵심입니다.',
+      swords:    ' 생각과 소통이 이 상황을 풀어낼 열쇠입니다.',
+      pentacles: ' 현실적이고 실질적인 접근이 필요한 때입니다.',
+    };
+    insight += suitMsgs[dominant[0]] || '';
+  }
+  return insight;
+}
+
+function interpretCardInContext(card, position, topic, concern) {
+  const dir = card.isRev ? '역방향' : '정방향';
+  const baseText = card.isRev ? card.rev : card.up;
+  const aiLines = card.suit === 'major' ? (AI_DB[card.k] || []) : (SUIT_MSG[card.suit] || []);
+  const positionLens = {
+    '현재 두 사람의 에너지':   '지금 이 관계를 감싸는 에너지는',
+    '상대방의 내면':           '상대방의 마음속에는',
+    '관계의 방향':             '두 사람이 향하고 있는 방향은',
+    '현재 상황의 핵심':        '지금 당신의 상황 중심에는',
+    '장애물':                  '넘어야 할 과제로',
+    '나아갈 방향':             '앞으로 취해야 할 행동은',
+    '현재의 나':               '지금 당신은',
+    '흐름':                    '자연스러운 흐름 속에서',
+    '결과':                    '이 선택이 이어지면',
+    '내면의 목소리':           '당신의 무의식이 속삭이는 것은',
+    '지금 필요한 것':          '지금 이 순간 가장 필요한 것은',
+    '나의 에너지':             '이 관계에서 당신이 가져오는 에너지는',
+    '상대의 에너지':           '상대방이 이 관계에 투영하는 것은',
+    '해결의 열쇠':             '상황을 바꿀 열쇠는',
+    '현재 몸과 마음의 에너지': '지금 당신의 몸과 마음은',
+    '회복의 열쇠':             '회복을 위해 필요한 것은',
+    '현재 재정 에너지':        '지금 돈의 흐름은',
+    '현재':                    '지금 이 상황을 감싸는 에너지는',
+    '조언':                    '마담 로제가 건네는 조언은',
+  };
+  const lens = positionLens[position] || '이 카드가 말하는 것은';
+  const extraLine = aiLines.length > 1 ? aiLines[1] : (aiLines[0] || '');
+  let text = `**[${position}] ${card.k}** — ${dir}\n\n`;
+  text += `${lens} **${card.k}**의 에너지입니다. ${baseText}`;
+  if (extraLine && extraLine.slice(0, 15) !== baseText.slice(0, 15)) {
+    text += `\n\n${extraLine}`;
+  }
+  return text;
+}
+
+function openChat() {
+  chatSession = {
+    stage: 'idle', topic: null, subTopic: null,
+    concern: '', keywords: [], questionCount: 0, userTurnCount: 0,
+    followupCount: 0, drawnCards: [], emotionTone: null, readingComplete: false,
+  };
+  chatDrawnCards = [];
+  chatHistory = [];
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatInput').value = '';
   document.getElementById('ov-chat').classList.add('open');
   addChatDivider('오늘');
-  setTimeout(()=>{addMasterMessage(MASTER_GREETINGS[Math.floor(Math.random()*MASTER_GREETINGS.length)],true);},500);
+  setTimeout(() => {
+    addMasterMessage(MASTER_GREETINGS[Math.floor(Math.random() * MASTER_GREETINGS.length)], true);
+  }, 500);
 }
-function closeChat(){document.getElementById('ov-chat').classList.remove('open');}
-function addChatDivider(text){
-  const el=document.createElement('div');el.className='chat-date-divider';el.textContent=text;
+
+function closeChat() { document.getElementById('ov-chat').classList.remove('open'); }
+
+function addChatDivider(text) {
+  const el = document.createElement('div'); el.className = 'chat-date-divider'; el.textContent = text;
   document.getElementById('chatMessages').appendChild(el);
 }
-function addMasterMessage(text,withTyping=false){
-  const msgs=document.getElementById('chatMessages');
-  if(withTyping){
-    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
-    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
-    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
-    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(text);},900+Math.random()*600);
-  } else {renderMasterBubble(text);}
+
+function addMasterMessage(text, withTyping = false) {
+  const msgs = document.getElementById('chatMessages');
+  if (withTyping) {
+    const typing = document.createElement('div'); typing.className = 'chat-msg'; typing.id = 'typingIndicator';
+    typing.innerHTML = `<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(() => { const t = document.getElementById('typingIndicator'); if (t) t.remove(); renderMasterBubble(text); }, 900 + Math.random() * 600);
+  } else { renderMasterBubble(text); }
 }
-function renderMasterBubble(text,cardData=null,drawBtn=false){
-  const msgs=document.getElementById('chatMessages');
-  const msg=document.createElement('div');msg.className='chat-msg';
-  const formatted=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
-  let cardHTML='';
-  if(cardData){
-    const imgPart=cardData.img?`<img src="${cardData.img}" alt="${cardData.k}" class="card-reveal-img" onerror="this.style.display='none'">`:`<div class="card-reveal-face">${cardData.emoji||'◈'}</div>`;
-    cardHTML=`<div class="card-reveal">${imgPart}<div class="card-reveal-info"><span class="card-reveal-name">${cardData.k}${cardData.isRev?' · 역방향':''}</span><span class="card-reveal-kw">${cardData.kw.join(' · ')}</span></div></div>`;
+
+function renderMasterBubble(text, cardData = null, drawBtn = false) {
+  const msgs = document.getElementById('chatMessages');
+  const msg = document.createElement('div'); msg.className = 'chat-msg';
+  const formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  let cardHTML = '';
+  if (cardData) {
+    const imgPart = cardData.img
+      ? `<img src="${cardData.img}" alt="${cardData.k}" class="card-reveal-img" onerror="this.style.display='none'">`
+      : `<div class="card-reveal-face">${cardData.emoji || '◈'}</div>`;
+    cardHTML = `<div class="card-reveal">${imgPart}<div class="card-reveal-info"><span class="card-reveal-name">${cardData.k}${cardData.isRev ? ' · 역방향' : ''}</span><span class="card-reveal-kw">${cardData.kw.join(' · ')}</span></div></div>`;
   }
-  const drawBtnHTML=drawBtn?`<br><button class="chat-draw-btn" id="chatDrawBtn" onclick="chatUserDraw()">카드 선택하기 ›</button>`:'';
-  msg.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master">${formatted}${cardHTML}${drawBtnHTML}</div>`;
-  msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
-  chatHistory.push({role:'master',text});
+  const drawBtnHTML = drawBtn ? `<br><button class="chat-draw-btn" id="chatDrawBtn" onclick="chatUserDraw()">카드 선택하기 ›</button>` : '';
+  msg.innerHTML = `<div class="chat-msg-av">◈</div><div class="chat-bubble master">${formatted}${cardHTML}${drawBtnHTML}</div>`;
+  msgs.appendChild(msg); msgs.scrollTop = msgs.scrollHeight;
+  chatHistory.push({ role: 'master', text });
 }
-function addUserMessage(text){
-  const msgs=document.getElementById('chatMessages');
-  const msg=document.createElement('div');msg.className='chat-msg user';
-  msg.innerHTML=`<div class="chat-bubble user">${text}</div><div class="chat-msg-av user-av" style="background:linear-gradient(135deg,var(--navy-l),var(--navy))">나</div>`;
-  msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
-  chatHistory.push({role:'user',text});
+
+function addUserMessage(text) {
+  const msgs = document.getElementById('chatMessages');
+  const msg = document.createElement('div'); msg.className = 'chat-msg user';
+  msg.innerHTML = `<div class="chat-bubble user">${text}</div><div class="chat-msg-av user-av" style="background:linear-gradient(135deg,var(--navy-l),var(--navy))">나</div>`;
+  msgs.appendChild(msg); msgs.scrollTop = msgs.scrollHeight;
+  chatHistory.push({ role: 'user', text });
 }
-function sendChat(){
-  const input=document.getElementById('chatInput');
-  const text=input.value.trim();if(!text)return;
-  input.value='';input.style.height='auto';
-  addUserMessage(text);respondToChat(text);
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim(); if (!text) return;
+  input.value = ''; input.style.height = 'auto';
+  addUserMessage(text); respondToChat(text);
 }
-function respondToChat(text){
-  const btn=document.getElementById('chatDrawBtn');if(btn)btn.disabled=true;
-  const intent=detectIntent(text);
-  let response='',showDrawBtn=false;
-  if(intent==='draw'){response=MASTER_RESPONSES.draw[Math.floor(Math.random()*MASTER_RESPONSES.draw.length)];showDrawBtn=true;}
-  else if(intent==='love'){response=MASTER_RESPONSES.keyword_love[Math.floor(Math.random()*MASTER_RESPONSES.keyword_love.length)];showDrawBtn=true;}
-  else if(intent==='work'){response=MASTER_RESPONSES.keyword_work[Math.floor(Math.random()*MASTER_RESPONSES.keyword_work.length)];showDrawBtn=true;}
-  else if(intent==='future'){response=MASTER_RESPONSES.keyword_future[Math.floor(Math.random()*MASTER_RESPONSES.keyword_future.length)];showDrawBtn=true;}
-  else{
-    const msgCount=chatHistory.filter(m=>m.role==='user').length;
-    response=MASTER_RESPONSES.generic[Math.floor(Math.random()*MASTER_RESPONSES.generic.length)];
-    if(msgCount>=2&&Math.random()>.4)showDrawBtn=true;
+
+function respondToChat(text) {
+  const btn = document.getElementById('chatDrawBtn'); if (btn) btn.disabled = true;
+
+  const isMeaningless = text.length < 3 || /^[ㅋㅎㅠㅜㄷㅇㅂ]+$/.test(text) || /^(ㅋ+|ㅎ+|\.+|!+|\s+)$/.test(text);
+  const isGreeting = /^(안녕|ㅎㅇ|하이|헬로|hi|hello|ㅋㅋ|ㅎㅎ|넹|넵|응|ㅇㅇ)$/.test(text.trim().toLowerCase());
+
+  chatSession.userTurnCount++;
+  chatSession.concern += ' ' + text;
+  const newKw = extractKeywords(text);
+  chatSession.keywords = [...new Set([...chatSession.keywords, ...newKw])];
+  const emotion = detectEmotion(text);
+  if (emotion) chatSession.emotionTone = emotion;
+
+  if (!isMeaningless && !isGreeting) {
+    if (!chatSession.topic || chatSession.topic === 'generic') {
+      const detected = detectTopic(text);
+      if (detected !== 'generic') chatSession.topic = detected;
+      else if (!chatSession.topic) chatSession.topic = 'generic';
+    }
+    if (chatSession.topic === 'love' && !chatSession.subTopic) {
+      if (/썸|고백|시작/.test(text)) chatSession.subTopic = 'new';
+      else if (/이별|헤어|재회/.test(text)) chatSession.subTopic = 'breakup';
+      else if (/결혼|프로포즈/.test(text)) chatSession.subTopic = 'marriage';
+      else chatSession.subTopic = 'ongoing';
+    }
   }
-  setTimeout(()=>{
-    const msgs=document.getElementById('chatMessages');
-    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
-    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
-    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
-    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(response,null,showDrawBtn);},800+Math.random()*700);
-  },200);
+
+  let response = '', showDrawBtn = false;
+
+  if (chatSession.stage === 'idle') {
+    chatSession.stage = 'gathering';
+    if (isMeaningless || isGreeting) {
+      response = '어서 오세요. 오늘 어떤 이야기를 가져오셨나요? 편하게 말씀해 주세요.';
+    } else {
+      response = buildEmpathyResponse(text, chatSession.topic, emotion);
+      const q = getNextQuestion();
+      if (q) { response += '\n\n' + q; chatSession.questionCount++; }
+    }
+
+  } else if (chatSession.stage === 'gathering') {
+    if (isMeaningless || isGreeting) {
+      response = '마음속에 있는 이야기를 조금 더 들려주실 수 있을까요?';
+    } else if (chatSession.questionCount < 1) {
+      chatSession.stage = 'deepening';
+      const ackMap = { anxious:'그 불안함을 잠시 내려놓고, ', negative:'그 감정을 충분히 느끼면서도, ', hopeful:'그 기대를 가지고, ', confused:'복잡한 생각들을 정리하면서, ' };
+      const ack = emotion ? (ackMap[emotion] || '') : '';
+      const q = getNextQuestion();
+      response = ack + (q || '조금 더 이야기해 주시겠어요?');
+      chatSession.questionCount++;
+    } else {
+      chatSession.stage = 'drawing';
+      response = buildReadingProposal();
+      showDrawBtn = true;
+    }
+
+  } else if (chatSession.stage === 'deepening') {
+    if (isMeaningless || isGreeting) {
+      chatSession.stage = 'drawing';
+      response = '준비가 되셨으면 카드로 에너지를 살펴볼게요.';
+      showDrawBtn = true;
+    } else {
+      chatSession.stage = 'drawing';
+      response = buildReadingProposal();
+      showDrawBtn = true;
+    }
+
+  } else if (chatSession.stage === 'drawing') {
+    response = '준비가 되셨군요. 마음을 고요히 하고 손이 이끌리는 카드를 선택해 주세요.';
+    showDrawBtn = true;
+
+  } else if (chatSession.stage === 'interpreting' || chatSession.stage === 'followup' || chatSession.stage === 'closed') {
+    const wantsMore = /더|추가|한 장|또|다시/.test(text);
+    if (chatSession.stage === 'closed') {
+      response = '오늘 리딩은 마무리되었어요. 새로운 질문이 있으시면 채팅을 다시 시작해 주세요. ✦';
+    } else if (wantsMore && chatSession.drawnCards.length < 4) {
+      chatSession.stage = 'drawing';
+      response = '한 장을 더 뽑아볼게요. 준비되시면 카드를 선택해 주세요.';
+      showDrawBtn = true;
+    } else {
+      response = buildFollowupResponse(text);
+      if (chatSession.stage === 'drawing') showDrawBtn = true;
+    }
+  }
+
+  const delay = 300 + text.length * 8;
+  setTimeout(() => {
+    const msgs = document.getElementById('chatMessages');
+    const typing = document.createElement('div'); typing.className = 'chat-msg'; typing.id = 'typingIndicator';
+    typing.innerHTML = `<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+    const readTime = 600 + response.length * 22;
+    setTimeout(() => {
+      const t = document.getElementById('typingIndicator'); if (t) t.remove();
+      renderMasterBubble(response, null, showDrawBtn);
+    }, Math.min(readTime, 3200));
+  }, delay);
 }
-function chatUserDraw(){
-  const btn=document.getElementById('chatDrawBtn');if(btn)btn.disabled=true;
-  const usedIds=chatDrawnCards.map(c=>c.id);
-  openPicker(null,usedIds,(card)=>{
-    const isRev=settings.rev&&Math.random()>.62;
-    const drawnCard={...card,isRev};
-    chatDrawnCards.push(drawnCard);
+
+function chatUserDraw() {
+  const btn = document.getElementById('chatDrawBtn'); if (btn) btn.disabled = true;
+  const usedIds = chatSession.drawnCards.map(c => c.id);
+  const layout = CARD_LAYOUTS[chatSession.topic] || CARD_LAYOUTS.generic;
+  const posIdx = chatSession.drawnCards.length;
+  const position = layout[posIdx] || layout[layout.length - 1];
+
+  openPicker(position.label, usedIds, (card) => {
+    const isRev = settings.rev && Math.random() > 0.62;
+    const drawnCard = { ...card, isRev, positionLabel: position.label };
+    chatSession.drawnCards.push(drawnCard);
+    chatDrawnCards = chatSession.drawnCards;
+
     addUserMessage('카드를 선택했습니다.');
-    const responseText=MASTER_RESPONSES.reveal(drawnCard,isRev);
-    const msgs=document.getElementById('chatMessages');
-    const typing=document.createElement('div');typing.className='chat-msg';typing.id='typingIndicator';
-    typing.innerHTML=`<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
-    msgs.appendChild(typing);msgs.scrollTop=msgs.scrollHeight;
-    setTimeout(()=>{const t=document.getElementById('typingIndicator');if(t)t.remove();renderMasterBubble(responseText,drawnCard,false);setTimeout(()=>{const fu=MASTER_RESPONSES.followup[Math.floor(Math.random()*MASTER_RESPONSES.followup.length)];addMasterMessage(fu,true);},2000);},1200);
+    const responseText = interpretCardInContext(drawnCard, position.label, chatSession.topic, chatSession.concern);
+
+    const msgs = document.getElementById('chatMessages');
+    const typing = document.createElement('div'); typing.className = 'chat-msg'; typing.id = 'typingIndicator';
+    typing.innerHTML = `<div class="chat-msg-av">◈</div><div class="chat-bubble master"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+
+    setTimeout(() => {
+      const t = document.getElementById('typingIndicator'); if (t) t.remove();
+      renderMasterBubble(responseText, drawnCard, false);
+
+      if (chatSession.drawnCards.length >= 2) {
+        const combo = interpretCardCombo(chatSession.drawnCards, chatSession.topic);
+        if (combo) setTimeout(() => addMasterMessage(combo, true), 1800);
+      }
+
+      const nextPos = layout[chatSession.drawnCards.length];
+      chatSession.stage = nextPos ? 'drawing' : 'interpreting';
+
+      setTimeout(() => {
+        if (nextPos) {
+          addMasterMessage(
+            `다음 카드를 선택해 주세요. **${nextPos.label}** — ${nextPos.question}에 집중하며 마음이 이끌리는 카드를 고르세요.`,
+            true
+          );
+          setTimeout(() => renderMasterBubble('', null, true), 1500);
+        } else {
+          chatSession.stage = 'followup';
+          addMasterMessage(buildClosingMessage(), true);
+        }
+      }, chatSession.drawnCards.length >= 2 ? 3000 : 1800);
+
+    }, 1400);
   });
 }
 
