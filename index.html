@@ -1722,7 +1722,7 @@ const SUIT_MSG = {
 
 const SPREADS = [
   {key:'single',icon:'◈',name:'오늘의 한 장',desc:'지금 가장 필요한 메시지',meta:'카드 1장 · 직접 선택 · 메이저 아르카나',count:1,labels:['오늘의 메시지'],userPick:[0],autoPick:[],majorOnly:true},
-  {key:'celtic',icon:'⬡',name:'상황 심층 분석',desc:'현재 상황을 깊이 들여다봅니다',meta:'카드 5장 · 3장 직접 선택 + 2장 자동',count:5,labels:['현재 상황','핵심 도전','무의식','조언(자동)','최종 결과(자동)'],userPick:[0,1,2],autoPick:[3,4],majorOnly:false},
+  {key:'celtic',icon:'⬡',name:'상황 심층 분석',desc:'현재 상황을 깊이 들여다봅니다',meta:'카드 5장 · 3장 직접 선택 + 2장 로제 선택',count:5,labels:['현재 상황','핵심 도전','무의식','로제의 선택 · 조언','로제의 선택 · 결과'],userPick:[0,1,2],autoPick:[3,4],majorOnly:false},
   {key:'chat',icon:'◉',name:'타로마스터와 소통하기',desc:'마담 로제와 실시간 대화로 리딩',meta:'실시간 채팅 · 카드 뽑기 포함',count:0,labels:[],userPick:[],autoPick:[],majorOnly:false},
 ];
 
@@ -1763,15 +1763,12 @@ function init(){
 
   cotdCard=MAJOR[seed%MAJOR.length];
 
-  // FIX: Proper image / fallback switching
   const ci=document.getElementById('cotdImg');
   const fb=document.getElementById('cotdFallback');
 
-  // Set fallback content immediately (always ready)
   document.getElementById('cotdRoman').textContent = cotdCard.num || '';
   document.getElementById('cotdFbName').textContent = cotdCard.k;
 
-  // Show fallback by default; switch to image on successful load
   ci.classList.add('hidden');
   fb.classList.remove('hidden');
 
@@ -1785,13 +1782,11 @@ function init(){
   };
   ci.src = cotdCard.img;
 
-  // Handle already-cached images (synchronous load)
   if (ci.complete) {
     if (ci.naturalWidth > 0) {
       ci.classList.remove('hidden');
       fb.classList.add('hidden');
     }
-    // else keep fallback visible
   }
 
   document.getElementById('cotdArcana').textContent=`메이저 · ${cotdCard.el||''}`;
@@ -2126,22 +2121,14 @@ function startReading(key){
     s++;if(s>=5){clearInterval(iv);setTimeout(buildReading,500);}
   },340);
 }
+
 function buildReading(){
   document.getElementById('ov-shuffle').classList.remove('open');
   const sp=curSpread;
-  const useRev=settings.rev;
-  // Initialize drawnCards and reset counter
   drawnCards=new Array(sp.count).fill(null);
   revealedCount=0;
   readingTriggered=false;
-  const autoPool=[...ALL_CARDS].sort(()=>Math.random()-.5);
-  let autoIdx=0;
-  sp.autoPick.forEach(i=>{
-    let card;
-    if(sp.majorOnly){const midx=Math.floor(Math.random()*MAJOR.length);card={...MAJOR[midx],isRev:useRev&&Math.random()>.62};}
-    else{while(autoIdx<autoPool.length&&drawnCards.some(d=>d&&d.id===autoPool[autoIdx].id))autoIdx++;card={...autoPool[autoIdx++],isRev:useRev&&Math.random()>.62};}
-    drawnCards[i]=card;
-  });
+
   document.getElementById('rdSpreadName').textContent=sp.name;
   const qp=document.getElementById('rdQPill');
   if(userQ){qp.textContent=`"${userQ}"`;qp.style.display='inline-block';}else{qp.style.display='none';}
@@ -2150,26 +2137,53 @@ function buildReading(){
   grid.style.gridTemplateColumns=cols;
   if(sp.count===1){grid.style.maxWidth='155px';grid.style.margin='0 auto 22px';}
   else{grid.style.maxWidth='';grid.style.margin='0 0 22px';}
+
   Array.from({length:sp.count},(_,i)=>{
     const isAuto=sp.autoPick.includes(i);
     const slot=document.createElement('div');slot.className='rd-slot';
-    const labelSuffix=isAuto?'<span style="display:block;font-size:.68rem;color:var(--gold-d);opacity:.8;margin-top:2px">자동</span>':'';
-    slot.innerHTML=`<div class="rd-pos">${sp.labels[i]}${labelSuffix}</div><div class="rd-wrap" id="rw${i}"><div class="rd-back" id="rdback${i}">ARCANA</div></div><div id="rcl${i}" style="display:none"><div class="rd-cname" id="rcname${i}"></div><div class="rd-crev" id="rcrev${i}"></div></div>`;
+    slot.innerHTML=`<div class="rd-pos">${sp.labels[i]}</div><div class="rd-wrap" id="rw${i}"><div class="rd-back" id="rdback${i}">ARCANA</div></div><div id="rcl${i}" style="display:none"><div class="rd-cname" id="rcname${i}"></div><div class="rd-crev" id="rcrev${i}"></div></div>`;
     grid.appendChild(slot);
-    if(!isAuto){
-      const back=slot.querySelector('.rd-back');
-      back.style.cursor='pointer';back.style.fontSize='.65rem';back.style.letterSpacing='1.5px';
-      back.innerHTML='탭하여<br>랜덤 뽑기';back.onclick=(()=>{const idx=i;return()=>promptUserPick(idx);})();
+
+    const back=slot.querySelector('.rd-back');
+    back.style.cursor='pointer';
+    back.style.fontSize='.65rem';
+    back.style.letterSpacing='1.5px';
+
+    if(isAuto){
+      // 로제의 선택 슬롯: 탭하면 랜덤 즉시 선택 + 플립
+      back.innerHTML='로제의<br>선택 받기';
+      back.onclick=(()=>{const idx=i;return()=>pickAutoCard(idx);})();
+    } else {
+      back.innerHTML='탭하여<br>랜덤 뽑기';
+      back.onclick=(()=>{const idx=i;return()=>promptUserPick(idx);})();
     }
   });
+
   document.getElementById('aiPanel').style.display='none';
   document.getElementById('rdActions').classList.remove('show');
-  document.getElementById('rdHint').textContent=sp.userPick.length>0?'카드를 탭하여 랜덤으로 뽑으세요':'카드를 탭하여 열어보세요';
+  document.getElementById('rdHint').textContent=
+    sp.userPick.length>0
+      ? sp.autoPick.length>0
+        ? '카드를 뽑고, 로제의 선택도 받아보세요'
+        : '카드를 탭하여 랜덤으로 뽑으세요'
+      : '카드를 탭하여 열어보세요';
   document.getElementById('ov-reading').classList.add('open');
   document.getElementById('rdScroll').scrollTop=0;
-  // 자동 슬롯 플립: 오버레이 렌더 완료 후 순차 실행
-  sp.autoPick.forEach(i=>setTimeout(()=>flipCard(i),700+i*350));
 }
+
+// 로제의 선택 슬롯: 탭 시 랜덤 카드 즉시 배정 + 플립
+function pickAutoCard(slotIdx){
+  const back=document.getElementById('rdback'+slotIdx);
+  if(back)back.onclick=null; // 중복 탭 방지
+  const useRev=settings.rev;
+  const usedIds=drawnCards.filter(Boolean).map(c=>c.id);
+  const pool=ALL_CARDS.filter(c=>!usedIds.includes(c.id));
+  if(pool.length===0)return;
+  const card={...pool[Math.floor(Math.random()*pool.length)],isRev:useRev&&Math.random()>.62};
+  drawnCards[slotIdx]=card;
+  flipCard(slotIdx);
+}
+
 function promptUserPick(slotIdx){
   const usedIds=drawnCards.filter(Boolean).map(c=>c.id);
   openPicker(curSpread.labels[slotIdx],usedIds,(card)=>{
@@ -2196,7 +2210,6 @@ function flipCard(i){
   document.getElementById('rcl'+i).style.display='block';
   document.getElementById('rcname'+i).textContent=card.k;
   if(card.isRev)document.getElementById('rcrev'+i).textContent='역방향 ↓';
-  // 완료 체크: drawnCards 기준 (DOM 스캔 경쟁 조건 방지)
   const sp=curSpread;
   const allFilled=drawnCards.slice(0,sp.count).every(c=>!!c);
   const allFlipped=Array.from({length:sp.count},(_,idx)=>idx).every(idx=>{const w=document.getElementById('rw'+idx);return w&&w.dataset.done;});
@@ -2216,9 +2229,7 @@ function generateReading(){
   setTimeout(()=>{
     const sp=curSpread;
     function dirLabel(c){return c.isRev?'역방향':'정방향';}
-    // 카드 핵심 메시지 (정/역 기본 의미)
     function cardCore(c){return c.isRev?c.rev:c.up;}
-    // 카드 행동 조언 — AI_DB[1] 또는 SUIT_MSG[1] 사용 (cardCore와 다른 텍스트)
     function cardAction(c){
       if(c.suit==='major'){
         const db=AI_DB[c.k];
@@ -2231,7 +2242,6 @@ function generateReading(){
       if(sm&&sm[0])return sm[0];
       return '카드의 에너지를 느껴보세요.';
     }
-    // 역방향 특화 메시지 (중복 방지용 별도 레이어)
     function cardRevNote(c){
       if(!c.isRev)return null;
       const SHADOW={
@@ -2262,12 +2272,12 @@ function generateReading(){
     }
 
     const SLOT_ROLES = {
-      '현재 상황':      { lens:'지금 당신이 처한 실질적인 상황을',          verb:'보여줍니다', focus:'현실 진단' },
-      '핵심 도전':      { lens:'넘어야 할 가장 중요한 장벽을',              verb:'나타냅니다', focus:'극복 과제' },
-      '무의식':         { lens:'아직 인식하지 못한 내면의 에너지를',         verb:'드러냅니다', focus:'숨겨진 동력' },
-      '조언(자동)':     { lens:'지금 취해야 할 구체적인 행동 방향을',        verb:'제시합니다', focus:'실천 지침' },
-      '최종 결과(자동)':{ lens:'현재 흐름이 이어진다면 도달하게 될 결과를',  verb:'암시합니다', focus:'미래 전망' },
-      '오늘의 메시지':  { lens:'오늘 하루 가슴에 새겨야 할 핵심 메시지를',  verb:'전합니다',  focus:'오늘의 지침' },
+      '현재 상황':           { lens:'지금 당신이 처한 실질적인 상황을',          verb:'보여줍니다', focus:'현실 진단' },
+      '핵심 도전':           { lens:'넘어야 할 가장 중요한 장벽을',              verb:'나타냅니다', focus:'극복 과제' },
+      '무의식':              { lens:'아직 인식하지 못한 내면의 에너지를',         verb:'드러냅니다', focus:'숨겨진 동력' },
+      '로제의 선택 · 조언':  { lens:'지금 취해야 할 구체적인 행동 방향을',        verb:'제시합니다', focus:'실천 지침' },
+      '로제의 선택 · 결과':  { lens:'현재 흐름이 이어진다면 도달하게 될 결과를',  verb:'암시합니다', focus:'미래 전망' },
+      '오늘의 메시지':       { lens:'오늘 하루 가슴에 새겨야 할 핵심 메시지를',  verb:'전합니다',   focus:'오늘의 지침' },
     };
 
     const validEntries=[];
@@ -2285,8 +2295,6 @@ function generateReading(){
       const action  = cardAction(c);
       const revNote = cardRevNote(c);
       const dirColor= c.isRev ? 'color:var(--ink-l)' : 'color:var(--navy)';
-
-      // action이 core와 같은 문장인 경우 중복 방지 (첫 20자 비교)
       const showAction = action && action.slice(0,20) !== core.slice(0,20);
 
       html+=`<div class="hl">
@@ -2306,39 +2314,33 @@ function generateReading(){
       </div>`;
     });
 
-    // ② 카드 흐름 읽기 (2장 이상, 단순 비율 설명 아닌 카드 간 서사)
+    // ② 흐름 읽기
     if(validEntries.length > 1){
       const cards = validEntries.map(e=>e.card);
       const revCount = cards.filter(c=>c.isRev).length;
       const first = validEntries[0].card;
       const last  = validEntries[validEntries.length-1].card;
-
-      // 흐름 에너지 — 비율이 아닌 맥락 서술
       let flowMsg='';
       if(revCount===0){
         flowMsg=`${first.k}부터 ${last.k}까지 모든 에너지가 열려 있습니다. 지금은 망설임보다 행동이 결과를 만들어 냅니다.`;
       } else if(revCount===cards.length){
         flowMsg=`모든 카드가 내면을 향하고 있습니다. 외부 행동을 잠시 멈추고, ${first.k}이 보여주는 내면의 막힘을 먼저 풀어주세요.`;
       } else {
-        // 첫 카드와 마지막 카드 방향성 기준으로 서사 구성
         const midRevCards = validEntries.slice(1,-1).filter(e=>e.card.isRev).map(e=>sp.labels[e.slotIdx]);
         const midBlock = midRevCards.length>0 ? `특히 <strong>${midRevCards.join(', ')}</strong> 영역의 에너지가 내부에 막혀 있어, 이 부분에서의 인식 전환이 전체 흐름을 바꾸는 열쇠입니다.` : '';
         flowMsg=`${first.k}에서 ${last.k}으로 이어지는 흐름 속에 전환점이 있습니다. ${midBlock}`;
       }
-
-      // 시작↔끝 긴장 또는 조화
       const arc = (first.isRev !== last.isRev)
         ? `<strong>${first.k}(현재)</strong>과 <strong>${last.k}(결과)</strong>의 방향이 엇갈립니다. 중간 과정에서 내리는 선택 하나가 결과를 뒤바꿀 수 있습니다.`
         : `시작과 끝의 에너지가 같은 방향을 가리킵니다. 지금 걷고 있는 길이 결과로 이어질 가능성이 높습니다.`;
-
       html+=`<div class="sec">흐름 읽기</div>
         <p>${flowMsg}</p>
         <p style="margin-top:10px">${arc}</p>`;
     }
 
-    // ③ 오늘의 한 가지 행동 — 조언(자동) 슬롯 우선, 없으면 마지막 카드
-    const pivotEntry = validEntries.find(e=>sp.labels[e.slotIdx]==='조언(자동)')
-      || validEntries.find(e=>sp.labels[e.slotIdx]==='최종 결과(자동)')
+    // ③ 오늘의 한 가지 행동
+    const pivotEntry = validEntries.find(e=>sp.labels[e.slotIdx]==='로제의 선택 · 조언')
+      || validEntries.find(e=>sp.labels[e.slotIdx]==='로제의 선택 · 결과')
       || validEntries[validEntries.length-1];
     const pivotCard   = pivotEntry.card;
     const pivotLabel  = sp.labels[pivotEntry.slotIdx] || '';
