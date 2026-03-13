@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Roze Tarot</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -166,7 +166,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   background:radial-gradient(ellipse 70% 60% at 50% 42%,
     transparent 0%,
     transparent 40%,
-    rgba(10,5,20,.35) 100%
+    rgba(10,5,20,.55) 100%
   );
 }
 .home-content{
@@ -279,7 +279,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    READ SCREEN (스프레드 선택)
 ══════════════════════════════ */
 #screen-read{background:var(--pur-deep)}
-.read-bg{position:absolute;inset:0;opacity:.35}
+.read-bg{position:absolute;inset:0;opacity:.55}
 .read-bg img{width:100%;height:100%;object-fit:cover}
 .spread-list{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
 
@@ -295,10 +295,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 /* 배경 이미지 — 장식용, 고정 높이 */
 .spread-btn-bg{
   width:100%;
-  height:72px;
+  height:auto;
   display:block;
-  object-fit:cover;
-  object-position:left center;
+  object-fit:contain;
   border-radius:6px;
 }
 /* 텍스트 오버레이 — 해 이미지 오른쪽 여백에 */
@@ -307,7 +306,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   inset:0;
   display:flex;align-items:center;
   /* 왼쪽 42%는 해 이미지, 오른쪽에 텍스트 */
-  padding:0 14px 0 42%;
+  padding:0 14px 0 38%;
   gap:0;
 }
 .spread-btn-icon{
@@ -324,20 +323,20 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   text-align:left;
 }
 .spread-btn-name{
-  font-family:'Cinzel',serif;
-  font-size:11.5px;font-weight:700;
-  letter-spacing:.08em;
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px;font-weight:600;
+  letter-spacing:.06em;
   color:#2a1600;
-  text-transform:uppercase;
-  text-shadow:0 1px 0 rgba(255,220,140,.4);
+  text-transform:none;
+  font-style:italic;
 }
 .spread-btn-desc{
-  font-family:'EB Garamond',serif;
-  font-style:italic;
-  font-size:11px;
+  font-family:'Cormorant Garamond',serif;
+  font-style:normal;
+  font-size:11.5px;
   color:#3d2008;
   opacity:1;
-  letter-spacing:.01em;
+  letter-spacing:.02em;
 }
 .spread-btn-arr{
   font-size:12px;
@@ -378,13 +377,138 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .deck-card.used-out{opacity:.25;pointer-events:none}
 .deck-confirm{padding:14px 18px calc(14px + var(--safe-bottom));flex-shrink:0;border-top:1px solid rgba(200,184,130,.2)}
 
+
+/* ══ 질문 입력 모달 ══ */
+#question-modal{
+  position:fixed;inset:0;z-index:190;
+  background:rgba(10,5,20,.88);
+  display:none;align-items:center;justify-content:center;
+  padding:24px;
+  animation:fadeIn .25s ease;
+}
+#question-modal.open{display:flex}
+.qm-box{
+  width:100%;max-width:360px;
+  background:linear-gradient(160deg,#2d1b4e,#1a0f2e);
+  border:1px solid rgba(200,184,130,.35);
+  border-radius:10px;
+  padding:28px 22px 22px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.qm-title{
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:.15em;
+  color:var(--gold);text-align:center;text-transform:uppercase;
+}
+.qm-sub{
+  font-family:'EB Garamond',serif;font-style:italic;font-size:14px;
+  color:var(--platinum);text-align:center;opacity:.85;line-height:1.6;
+}
+.qm-textarea{
+  width:100%;min-height:90px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(200,184,130,.3);border-radius:6px;
+  color:var(--cream);font-family:'EB Garamond',serif;font-size:15px;
+  padding:12px 14px;resize:none;outline:none;
+  line-height:1.6;
+}
+.qm-textarea::placeholder{color:rgba(200,184,130,.35);font-style:italic}
+.qm-textarea:focus{border-color:rgba(200,184,130,.6);}
+.qm-btns{display:flex;flex-direction:column;gap:8px;}
+.qm-btn-skip{
+  width:100%;padding:9px 0;
+  font-family:'EB Garamond',serif;font-style:italic;font-size:13px;letter-spacing:.05em;
+  color:rgba(200,184,130,.5);background:transparent;
+  border:none;border-radius:4px;
+  cursor:pointer;transition:all .2s;
+}
+.qm-btn-skip:active{border-color:var(--gold);color:var(--gold)}
+.qm-btn-go{
+  width:100%;padding:12px 0;
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;
+  color:var(--pur-deep);
+  background:linear-gradient(135deg,var(--plat-shine),var(--gold));
+  border:none;border-radius:4px;cursor:pointer;
+  text-transform:uppercase;font-weight:600;transition:all .2s;
+}
+.qm-btn-go:active{filter:brightness(.9)}
+
+/* ══ 카드 섞기 오버레이 ══ */
+#shuffle-modal{
+  position:fixed;inset:0;z-index:195;
+  background:rgba(10,5,20,.95);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:32px;
+}
+#shuffle-modal.open{display:flex}
+.shuffle-cards{
+  position:relative;
+  width:180px;height:240px;
+}
+.shuffle-card{
+  position:absolute;
+  width:80px;height:130px;
+  background:linear-gradient(160deg,#3d2468,#1a0f2e);
+  border:1.5px solid rgba(200,184,130,.5);
+  border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;color:rgba(200,184,130,.4);
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  transform-origin:center bottom;
+  transition:none;
+}
+.shuffle-text{
+  font-family:'Cinzel',serif;font-size:13px;letter-spacing:.2em;
+  color:var(--gold);text-align:center;
+  animation:shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer{0%,100%{opacity:.6}50%{opacity:1}}
+/* 오늘의 카드 — 천천히 회전하며 빛나는 카드 */
+@keyframes cardSpin{
+  0%  {transform:rotateY(0deg);box-shadow:0 0 20px rgba(200,184,130,.2),0 8px 32px rgba(0,0,0,.6)}
+  25% {transform:rotateY(90deg);box-shadow:0 0 60px rgba(200,184,130,.7),0 8px 40px rgba(0,0,0,.4)}
+  50% {transform:rotateY(180deg);box-shadow:0 0 20px rgba(200,184,130,.2),0 8px 32px rgba(0,0,0,.6)}
+  75% {transform:rotateY(270deg);box-shadow:0 0 60px rgba(200,184,130,.7),0 8px 40px rgba(0,0,0,.4)}
+  100%{transform:rotateY(360deg);box-shadow:0 0 20px rgba(200,184,130,.2),0 8px 32px rgba(0,0,0,.6)}
+}
+@keyframes cardGlow{
+  0%,100%{opacity:.7}
+  50%{opacity:1}
+}
+.sc-spin{
+  animation:cardSpin 3s linear infinite;
+  transform-style:preserve-3d;
+}
+.sc-spin-inner{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:rgba(200,184,130,.7);
+  animation:cardGlow 3s ease-in-out infinite;
+  backface-visibility:visible;
+}
+
+/* 심층분석 — 카드 3장 페이드인/아웃 */
+@keyframes cardFade1{
+  0%,100%{opacity:0;transform:translateY(6px)}
+  20%,80%{opacity:1;transform:translateY(0)}
+}
+@keyframes cardFade2{
+  0%,100%{opacity:0;transform:translateY(6px)}
+  20%,80%{opacity:1;transform:translateY(0)}
+}
+@keyframes cardFade3{
+  0%,100%{opacity:0;transform:translateY(6px)}
+  20%,80%{opacity:1;transform:translateY(0)}
+}
+.sc-fade-1{animation:cardFade1 2.4s ease-in-out infinite}
+.sc-fade-2{animation:cardFade2 2.4s ease-in-out infinite .5s}
+.sc-fade-3{animation:cardFade3 2.4s ease-in-out infinite 1s}
 /* ══════════════════════════════
    오늘의 카드
 ══════════════════════════════ */
 #screen-today{background:var(--pur-deep)}
 .today-bg{position:absolute;inset:0;opacity:.45}
 .today-bg img{width:100%;height:100%;object-fit:cover}
-.today-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:24px 20px 80px;gap:20px;flex:1;overflow-y:auto}
+.today-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:24px 20px 80px;gap:20px;flex:1;overflow:visible;min-height:0}
 .yn-toggle{display:flex;gap:0;border:1px solid rgba(200,184,130,.3);border-radius:3px;overflow:hidden;margin-top:4px}
 .yn-btn{flex:1;padding:9px 0;font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;color:var(--platinum);background:transparent;border:none;cursor:pointer;text-transform:uppercase;transition:all .25s;text-align:center}
 .yn-btn.active{background:linear-gradient(135deg,var(--plat-shine),var(--gold));color:var(--pur-deep)}
@@ -417,17 +541,23 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
 /* ══ TODAY FAN PICKER ══ */
 .today-fan-container{
+  width:100%;
+  overflow:visible;
+  padding:44px 0 10px;
+}
+.today-fan-scroll{
   width:100%;overflow-x:auto;overflow-y:visible;
   -webkit-overflow-scrolling:touch;
-  padding:20px 0 30px;
   scrollbar-width:none;
+  padding-bottom:4px;
 }
+.today-fan-scroll::-webkit-scrollbar{display:none}
 .today-fan-container::-webkit-scrollbar{display:none}
 .today-fan-inner{
   display:flex;flex-direction:row;
   align-items:flex-end;
   gap:-18px;
-  padding:10px 20px 10px;
+  padding:4px 20px 8px;
   width:max-content;
   min-width:100%;
   justify-content:center;
@@ -448,16 +578,28 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .fan-card::before{
   content:'✦';color:rgba(200,184,130,.2);font-size:20px;
 }
-.fan-card:hover,.fan-card:active{
-  transform:translateY(-20px) scale(1.08) !important;
-  box-shadow:0 12px 28px rgba(0,0,0,.6),0 0 16px rgba(200,184,130,.35);
-  border-color:var(--gold);
+.fan-card:not(.picked):hover{
+  transform:translateY(-14px) rotate(var(--tilt,0deg)) !important;
+  box-shadow:0 10px 24px rgba(0,0,0,.5),0 0 12px rgba(200,184,130,.25);
+  border-color:rgba(200,184,130,.6);
   z-index:20 !important;
 }
-.fan-card.fan-card:hover::before,.fan-card:active::before{
-  color:rgba(200,184,130,.6);
+.fan-card:not(.picked):active{
+  transform:translateY(-26px) scale(1.06) rotate(0deg) !important;
+  box-shadow:0 18px 36px rgba(0,0,0,.7),0 0 28px rgba(200,184,130,.6);
+  border-color:var(--gold);
+  z-index:30 !important;
+}
+.fan-card:not(.picked):hover::before,.fan-card:not(.picked):active::before{
+  color:rgba(200,184,130,.5);
+}
+.fan-card.picked{
+  cursor:default;
 }
 
+
+/* 오늘의 카드 — 카드 잘림 방지 */
+.today-screen .scroll-body{overflow-x:visible;overflow-y:auto}
 /* ══ CHAT FAN MODAL ══ */
 #chat-fan-modal{
   position:fixed;inset:0;z-index:250;
@@ -797,7 +939,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   <!-- ══ HOME ══ -->
   <div id="screen-home" class="screen active">
     <div class="home-bg">
-      <img src="https://i.imgur.com/Ao6JrbW.png" alt="">
+      <img src="https://i.imgur.com/lXxy48G.png" alt="">
       <div class="home-bg-ov"></div>
     </div>
     <div class="home-content">
@@ -825,7 +967,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   <div id="screen-read" class="screen">
     <div class="read-bg"><img src="https://i.imgur.com/Ao6JrbW.png" alt=""></div>
     <div class="app-bar">
-      <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">READING</span>
+      <button class="back-btn" onclick="goBack()">❮</button>
+      <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase">Reading</span>
+      <div style="width:36px"></div>
     </div>
     <div class="scroll-body">
       <div class="spread-list">
@@ -834,7 +978,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
           <p class="t-sub" style="margin-top:6px">원하는 리딩 방식을 고르세요</p>
         </div>
         <!-- 오늘의 카드 -->
-        <button class="spread-btn" onclick="showScreen('today')">
+        <button class="spread-btn" onclick="startTodayShuffle()">
           <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
@@ -846,8 +990,8 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
         </button>
 
         <!-- 상황 심층분석 -->
-        <button class="spread-btn" onclick="showScreen('celtic')">
-          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
+        <button class="spread-btn" onclick="openQuestionModal('celtic')">
+          <img src="https://i.imgur.com/ztdzVat.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
               <span class="spread-btn-name">상황 심층분석</span>
@@ -858,11 +1002,11 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
         </button>
 
         <!-- 로제와 상담 -->
-        <button class="spread-btn" onclick="showScreen('chat')">
-          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
+        <button class="spread-btn" onclick="startChatShuffle()">
+          <img src="https://i.imgur.com/Sq6qEWn.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
-              <span class="spread-btn-name">타로마스터 로제 상담</span>
+              <span class="spread-btn-name">타로마스터 로제의 상담</span>
               <span class="spread-btn-desc">깊이 있는 채팅 상담 · 카드 기반 해석</span>
             </span>
             <span class="spread-btn-arr">✦</span>
@@ -873,7 +1017,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   </div>
 
   <!-- ══ 오늘의 카드 ══ -->
-  <div id="screen-today" class="screen">
+  <div id="screen-today" class="screen today-screen">
     <div class="today-bg"><img src="https://i.imgur.com/5HinfXg.jpeg" alt=""></div>
     <div class="app-bar">
       <button class="back-btn" onclick="goBack()">❮</button>
@@ -892,10 +1036,11 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
           </div>
         </div>
 
-        <div class="big-card-area max-w" style="align-items:center">
+        <div class="big-card-area max-w" style="align-items:center;width:100%">
           <p class="t-sub" style="font-size:13px" id="today-instruction">카드 더미에서 한 장을 골라 오늘의 메시지를 받으세요</p>
-          <div id="today-fan-area" style="width:100%;position:relative">
+          <div id="today-fan-area" style="width:100%;position:relative;min-height:180px">
           </div>
+          <button id="today-confirm-btn" onclick="confirmTodayCard()" style="display:none;margin-top:16px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--pur-deep);background:linear-gradient(135deg,var(--plat-shine),var(--gold));border:none;border-radius:4px;padding:13px 32px;cursor:pointer;width:100%;max-width:300px;transition:filter .2s">✦ 카드 열기 ✦</button>
           <div id="today-revealed-wrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
             <div class="flip-wrapper" id="today-flip-wrapper">
               <div class="flip-inner" id="today-flip-inner">
@@ -927,6 +1072,10 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
     </div>
     <div class="scroll-body">
       <div class="celtic-inner">
+        <div id="celtic-question-banner" style="display:none;width:100%;max-width:360px;text-align:center;margin-bottom:4px;padding:10px 8px">
+          <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:rgba(200,184,130,.5);text-transform:uppercase;margin-bottom:8px">✦ 질문 ✦</div>
+          <div id="celtic-question-text" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--plat-shine);line-height:1.65;"></div>
+        </div>
         <p class="t-title">상황 심층분석</p>
         <p class="t-sub">3장 배열 · 상황 / 흐름 / 조언</p>
         <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:13px;color:var(--platinum);opacity:.7;text-align:center;line-height:1.6;max-width:300px;margin:0 auto">카드를 탭하여 더미에서 선택하세요<br><span style="color:rgba(200,150,150,.8)">⚘ 조언 카드는 로제가 선택합니다</span></p>
@@ -1052,6 +1201,22 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
       <span class="nl">설정</span>
     </button>
   </nav>
+  <!-- ══ 질문 입력 모달 ══ -->
+  <div id="question-modal">
+    <div class="qm-box">
+      <div class="qm-title">✦ 질문을 떠올리세요 ✦</div>
+      <textarea class="qm-textarea" id="question-input" placeholder="예) 그 사람은 나를 어떻게 생각할까?&#10;예) 지금 이 선택이 옳은 걸까?" maxlength="100"></textarea>
+      <button class="qm-btn-go" onclick="startShuffle()">카드 뽑기 →</button>
+      <button class="qm-btn-skip" onclick="startShuffle(true)">건너뛰기</button>
+    </div>
+  </div>
+
+  <!-- ══ 카드 섞기 오버레이 ══ -->
+  <div id="shuffle-modal">
+    <div class="shuffle-cards" id="shuffle-cards"></div>
+    <div class="shuffle-text" id="shuffle-text">카드를 섞고 있습니다...</div>
+  </div>
+
 </div>
 
 <script>
@@ -1245,6 +1410,142 @@ function buildSparkles(){
 // NAVIGATION
 // ════════════════════════════════
 const SCREEN_NAV = {home:'nav-home',read:'nav-read',today:'nav-read',celtic:'nav-read',chat:'nav-read',deck:'nav-deck',settings:'nav-settings'};
+
+// ════════════════════════════════
+// 질문 입력 모달
+// ════════════════════════════════
+
+let dotInterval = null;
+function startDotAnim(baseText) {
+  const el = document.getElementById('shuffle-text');
+  if(!el) return;
+  let count = 0;
+  el.textContent = baseText;
+  if(dotInterval) clearInterval(dotInterval);
+  dotInterval = setInterval(() => {
+    count = (count + 1) % 4;
+    el.textContent = baseText + '.'.repeat(count);
+  }, 400);
+}
+function stopDotAnim() {
+  if(dotInterval) { clearInterval(dotInterval); dotInterval = null; }
+}
+let pendingScreen = null;
+let userQuestion = '';
+
+function openQuestionModal(targetScreen) {
+  pendingScreen = targetScreen;
+  document.getElementById('question-input').value = '';
+  document.getElementById('question-modal').classList.add('open');
+}
+
+
+
+function startChatShuffle() {
+  const sm = document.getElementById('shuffle-modal');
+  const sc = document.getElementById('shuffle-cards');
+  const st = document.getElementById('shuffle-text');
+  sc.innerHTML = '';
+  sc.style.cssText = 'position:relative;width:100px;height:160px;perspective:600px';
+  startDotAnim('로제와 연결 중입니다');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;inset:0;transform-style:preserve-3d';
+  const c = document.createElement('div');
+  c.className = 'shuffle-card sc-spin';
+  c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+  const inner = document.createElement('div');
+  inner.className = 'sc-spin-inner';
+  inner.textContent = '❦';
+  c.appendChild(inner);
+  wrap.appendChild(c);
+  sc.appendChild(wrap);
+  sm.classList.add('open');
+  setTimeout(() => {
+    stopDotAnim();
+    sm.classList.remove('open');
+    showScreen('chat');
+  }, 1800);
+}
+
+function startTodayShuffle() {
+  const sm = document.getElementById('shuffle-modal');
+  const sc = document.getElementById('shuffle-cards');
+  const st = document.getElementById('shuffle-text');
+  sc.innerHTML = '';
+  sc.style.cssText = 'position:relative;width:100px;height:160px;perspective:600px';
+  startDotAnim('카드를 섞고 있습니다');
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;inset:0;transform-style:preserve-3d';
+  const c = document.createElement('div');
+  c.className = 'shuffle-card sc-spin';
+  c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+  const inner = document.createElement('div');
+  inner.className = 'sc-spin-inner';
+  inner.textContent = '✦';
+  c.appendChild(inner);
+  wrap.appendChild(c);
+  sc.appendChild(wrap);
+  sm.classList.add('open');
+  setTimeout(() => {
+    stopDotAnim();
+    sm.classList.remove('open');
+    showScreen('today');
+  }, 2200);
+}
+
+function startShuffle(skip) {
+  userQuestion = skip ? '' : (document.getElementById('question-input').value.trim());
+  document.getElementById('question-modal').classList.remove('open');
+
+  const sm = document.getElementById('shuffle-modal');
+  const sc = document.getElementById('shuffle-cards');
+  const st = document.getElementById('shuffle-text');
+  sc.innerHTML = '';
+
+  if(pendingScreen === 'celtic') {
+    // 심층분석 — 카드 3장 페이드인/아웃
+    sc.style.cssText = 'position:relative;width:220px;height:140px;perspective:600px';
+    startDotAnim('카드를 준비하고 있습니다');
+    const cards = [
+      {left:'10px', top:'10px', cls:'sc-fade-1'},
+      {left:'70px', top:'0px',  cls:'sc-fade-2'},
+      {left:'130px',top:'10px', cls:'sc-fade-3'},
+    ];
+    cards.forEach(p => {
+      const c = document.createElement('div');
+      c.className = 'shuffle-card ' + p.cls;
+      c.style.cssText = `position:absolute;left:${p.left};top:${p.top};width:70px;height:114px;opacity:0`;
+      c.textContent = '✦';
+      sc.appendChild(c);
+    });
+  } else {
+    // 기본(chat) — 카드 1장 회전하며 빛나기
+    sc.style.cssText = 'position:relative;width:100px;height:160px;perspective:600px';
+    startDotAnim('카드를 섞고 있습니다');
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'position:absolute;inset:0;transform-style:preserve-3d';
+    const c = document.createElement('div');
+    c.className = 'shuffle-card sc-spin';
+    c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+    const inner = document.createElement('div');
+    inner.className = 'sc-spin-inner';
+    inner.textContent = '✦';
+    c.appendChild(inner);
+    wrap.appendChild(c);
+    sc.appendChild(wrap);
+  }
+
+  sm.classList.add('open');
+  setTimeout(() => {
+    stopDotAnim();
+    sm.classList.remove('open');
+    if(pendingScreen) {
+      showScreen(pendingScreen);
+      pendingScreen = null;
+    }
+  }, 2200);
+}
+
 let screenHistory = [];
 
 function showScreen(id, pushHistory=true){
@@ -1264,7 +1565,19 @@ function showScreen(id, pushHistory=true){
   else document.body.classList.remove('on-home');
   if(id==='chat') { if(chatHistory.length===0) setTimeout(initChat,50); }
   if(id==='today') { todaySelected=false; setTimeout(initTodayFan, 80); }
-  if(id==='celtic') { resetThree(); }
+  if(id==='celtic') {
+    resetThree();
+    const banner = document.getElementById('celtic-question-banner');
+    const qText = document.getElementById('celtic-question-text');
+    if(banner && qText) {
+      if(userQuestion) {
+        qText.textContent = "“" + userQuestion + "”";
+        banner.style.display = 'block';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+  }
 }
 
 function goBack(){
@@ -1327,7 +1640,8 @@ function openDeckPicker(title, instruction, usedIds, callback){
 
 function buildDeckPile(){
   const pile = document.getElementById('deck-pile');
-  pile.innerHTML = CARDS.map(c=>{
+  const shuffled = [...CARDS].sort(()=>Math.random()-.5);
+  pile.innerHTML = shuffled.map(c=>{
     const used = deckUsed.includes(c.id);
     return `<div class="deck-card${used?' used-out':''}" id="dpick-${c.id}" onclick="selectDeckCard(${c.id})">
       ${used?'<span style="color:rgba(200,184,130,.15);font-size:14px">✦</span>':''}
@@ -1365,17 +1679,26 @@ function initTodayFan(){
   const totalCards = todayFanShuffled.length;
 
   area.innerHTML = '<div class="today-fan-container" id="today-fan-container">'
+    + '<div class="today-fan-scroll">'
     + '<div class="today-fan-inner" id="today-fan-inner"></div>'
+    + '</div>'
     + '</div>'
     + '<p style="font-family:Cinzel,serif;font-size:9px;letter-spacing:.18em;color:rgba(200,184,130,.45);text-align:center;margin-top:4px;text-transform:uppercase">← 스크롤하여 카드 선택 →</p>';
 
   const inner = document.getElementById('today-fan-inner');
+  // 카드 순서 랜덤성 강화 — Fisher-Yates 추가 셔플
+  for(let i = todayFanShuffled.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [todayFanShuffled[i], todayFanShuffled[j]] = [todayFanShuffled[j], todayFanShuffled[i]];
+  }
+
   todayFanShuffled.forEach((card, i) => {
     const el = document.createElement('div');
     el.className = 'fan-card';
     el.id = 'fan-' + card.id;
     const tilt = (i - totalCards/2) * 1.2;
     el.style.transform = `rotate(${tilt}deg)`;
+    el.style.setProperty('--tilt', tilt + 'deg');
     el.style.zIndex = i;
     el.onclick = () => pickTodayFanCard(card, el);
     inner.appendChild(el);
@@ -1387,31 +1710,52 @@ function pickTodayFanCard(card, el){
   todayCard = card;
   todaySelected = true;
 
+  // 선택된 카드 강조 — 위로 띄우기
+  el.classList.add('picked');
   el.style.borderColor = 'var(--gold)';
-  el.style.transform = 'translateY(-30px) scale(1.1) rotate(0deg)';
-  el.style.boxShadow = '0 20px 40px rgba(0,0,0,.7), 0 0 24px rgba(200,184,130,.5)';
+  el.style.transform = 'translateY(-36px) scale(1.12) rotate(0deg)';
+  el.style.boxShadow = '0 20px 40px rgba(0,0,0,.7), 0 0 30px rgba(200,184,130,.6)';
   el.style.zIndex = 50;
+  el.style.transition = 'all .4s cubic-bezier(.2,0,.2,1)';
 
+  // 나머지 카드 흐리게
   document.querySelectorAll('.fan-card').forEach(fc => {
-    if(fc !== el) fc.style.opacity = '0.25';
+    if(fc !== el) { fc.style.opacity = '0.15'; fc.style.transition = 'opacity .4s'; }
   });
 
+  // 안내 문구 변경 → 사용자가 확인 버튼 누를 때까지 대기
+  const instr = document.getElementById('today-instruction');
+  if(instr) { instr.style.display = 'block'; instr.textContent = '카드를 확인할 준비가 되면 아래 버튼을 눌러주세요'; }
+
+  // "카드 열기" 버튼 표시
+  const confirmBtn = document.getElementById('today-confirm-btn');
+  if(confirmBtn) confirmBtn.style.display = 'block';
+}
+
+function confirmTodayCard(){
+  const confirmBtn = document.getElementById('today-confirm-btn');
+  if(confirmBtn) confirmBtn.style.display = 'none';
+
+  const instr = document.getElementById('today-instruction');
+  if(instr) instr.style.display = 'none';
+
+  document.getElementById('today-fan-area').style.display = 'none';
+  const revealWrap = document.getElementById('today-revealed-wrap');
+  revealWrap.style.display = 'flex';
+
+  const card = todayCard;
+  const back = document.getElementById('today-flip-back');
+  back.innerHTML = `
+    <div class="flip-back-num">${card.num}</div>
+    <div class="flip-back-sym">${card.sym}</div>
+    <div class="flip-back-name">${card.name}</div>`;
+
   setTimeout(() => {
-    document.getElementById('today-fan-area').style.display = 'none';
-    const revealWrap = document.getElementById('today-revealed-wrap');
-    revealWrap.style.display = 'flex';
-    const back = document.getElementById('today-flip-back');
-    back.innerHTML = `
-      <div class="flip-back-num">${card.num}</div>
-      <div class="flip-back-sym">${card.sym}</div>
-      <div class="flip-back-name">${card.name}</div>`;
-    setTimeout(() => {
-      document.getElementById('today-flip-inner').classList.add('flipped');
-      setTimeout(() => renderTodayMeaning(), 400);
-    }, 200);
-    document.getElementById('today-instruction').style.display = 'none';
-    document.getElementById('today-reset-btn').style.display = 'block';
-  }, 600);
+    document.getElementById('today-flip-inner').classList.add('flipped');
+    setTimeout(() => renderTodayMeaning(), 400);
+  }, 200);
+  document.getElementById('today-reset-btn').style.display = 'block';
+  // 모드 토글은 카드 뽑은 후에도 유지 (yes/no 전환 가능하도록)
 }
 
 function setYNMode(mode){
@@ -1458,6 +1802,8 @@ function resetToday(){
   if(sa) sa.classList.remove('show');
   const rb = document.getElementById('today-reset-btn');
   if(rb) rb.style.display = 'none';
+  const cb = document.getElementById('today-confirm-btn');
+  if(cb) cb.style.display = 'none';
   const ins = document.getElementById('today-instruction');
   if(ins) ins.style.display = 'block';
   const fa = document.getElementById('today-fan-area');
@@ -1585,6 +1931,7 @@ function rozePickThreeAdvice(){
 
 function showThreeResult(){
   const result = document.getElementById('three-result');
+
   let html = '<div class="t-title" style="margin-bottom:16px">✦ 해석 ✦</div>';
 
   THREE_POSITIONS.forEach((pos, i) => {
@@ -1606,6 +1953,27 @@ function showThreeResult(){
       + '</div>'
       + '<div class="divider" style="margin-bottom:14px"></div>';
   });
+
+  // 로제 마지막 조언 — 질문이 있을 때 카드 advice 기반으로
+  if(userQuestion) {
+    const adviceCard = threeCards[2] || threeCards[1] || threeCards[0];
+    const rozeAdvice = adviceCard ? adviceCard.advice : '';
+    if(rozeAdvice) {
+      html += `<div style="
+        margin:8px 0 16px;
+        padding:18px 18px 18px 20px;
+        background:linear-gradient(135deg,rgba(90,40,100,.25),rgba(45,27,78,.4));
+        border:1px solid rgba(200,150,150,.3);
+        border-left:3px solid rgba(200,150,150,.6);
+        border-radius:6px;
+        position:relative;
+      ">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:.2em;color:rgba(200,150,150,.85);text-transform:uppercase;margin-bottom:10px">✦ 로제의 한마디 ✦</div>
+        <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--plat-shine);line-height:1.8;margin:0">${rozeAdvice}</p>
+        ${userQuestion ? `<p style="font-family:'EB Garamond',serif;font-size:12px;color:rgba(200,184,130,.5);margin-top:10px;font-style:italic">“${userQuestion}” 에 대하여</p>` : ''}
+      </div>`;
+    }
+  }
 
   html += '<div style="height:10px"></div>'
     + '<button class="btn-ghost w-full" onclick="saveThreeImage()">🖼 이미지로 저장</button>';
