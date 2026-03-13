@@ -45,6 +45,12 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   padding-bottom:var(--safe-bottom);
   flex-shrink:0;z-index:100;
 }
+/* 홈에서 네비 투명 */
+#screen-home.active ~ * #bottom-nav,
+.home-nav-transparent #bottom-nav{
+  background:transparent;
+  border-top-color:transparent;
+}
 .nav-btn{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:10px 0 8px;border:none;background:none;cursor:pointer;gap:5px;
@@ -134,6 +140,15 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 }
 .btn-ghost:active{border-color:var(--gold);color:var(--gold)}
 
+
+/* 홈 활성화 시 네비 투명 처리 */
+body.on-home #bottom-nav{
+  background:rgba(10,5,20,.45) !important;
+  border-top-color:rgba(200,184,130,.1) !important;
+}
+body.on-home #bottom-nav .nav-btn .nl{ color:rgba(200,184,130,.55); }
+body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
+
 /* ══ SPARKLES ══ */
 #sparkles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .sp{position:absolute;width:2px;height:2px;background:var(--gold);border-radius:50%;opacity:0;animation:spk var(--d) var(--dl) ease-in-out infinite}
@@ -144,12 +159,10 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 ══════════════════════════════ */
 #screen-home{align-items:center;justify-content:center;overflow-y:auto}
 
-/* 홈 테두리 제거됨 */
-.home-bg{position:absolute;inset:0}
+.home-bg{position:fixed;inset:0;z-index:0}
 .home-bg img{width:100%;height:100%;object-fit:cover;object-position:center top}
 .home-bg-ov{
   position:absolute;inset:0;
-  /* 바깥 테두리 살짝 어둡게, 중앙은 배경 그대로 */
   background:radial-gradient(ellipse 70% 60% at 50% 42%,
     transparent 0%,
     transparent 40%,
@@ -166,19 +179,14 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 }
 @keyframes fuIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
-/* 상단 금테 장식 */
-
-
 /* 로고 */
 .home-logo-wrap{
   position:relative;
   display:flex;align-items:center;justify-content:center;
 }
-/* 로고 뒤 빛 후광 (캡처 참고) */
 .home-logo-wrap::before{
   content:'';
   position:absolute;
-  /* 배경 중앙 큰 타원 빛 — 캡처의 밝은 중심부 */
   width:340px; height:260px;
   top:50%; left:50%;
   transform:translate(-50%, -40%);
@@ -196,7 +204,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 .home-logo-wrap::after{
   content:'';
   position:absolute;
-  /* 내부 핵심 빛 — 더 밝고 좁은 */
   width:200px; height:140px;
   top:50%; left:50%;
   transform:translate(-50%, -42%);
@@ -215,6 +222,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   0%,100%{opacity:.75;transform:translate(-50%,-40%) scale(1)}
   50%{opacity:1;transform:translate(-50%,-40%) scale(1.12)}
 }
+/* 홈 메인 로고 — zaIpITA (변경됨) */
 .home-logo{
   width:min(280px,75vw);
   filter:drop-shadow(0 4px 32px rgba(200,184,130,.45));
@@ -231,7 +239,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   text-shadow:0 1px 8px rgba(0,0,0,.7);
 }
 
-/* 이미지 버튼 */
+/* ══ 홈 이미지 버튼 ══ */
 .home-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:300px}
 
 .btn-img-gold,.btn-img-silver{
@@ -248,7 +256,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   width:100%;height:auto;display:block;
   border-radius:4px;
 }
-/* 은버튼 이미지 축소 — 장식이 안쪽이라 네모가 더 커 보임, 87%로 맞춤 */
 .btn-img-silver .btn-img-bg{
   width:87%;
   margin:0 auto;
@@ -275,67 +282,70 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 .read-bg{position:absolute;inset:0;opacity:.35}
 .read-bg img{width:100%;height:100%;object-fit:cover}
 .spread-list{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
-/* ── Image-button style spread items ── */
+
+/* ── 스프레드 버튼: CSS 버튼, 이미지는 배경 장식만 ── */
 .spread-btn{
   position:relative;
   width:100%;
   border:none;background:none;padding:0;cursor:pointer;
   display:block;
   transition:transform .18s ease, filter .18s ease;
-  /* 이미지 비율 유지 */
 }
 .spread-btn:active{ transform:scale(.97); filter:brightness(.85); }
+/* 배경 이미지 — 장식용, 고정 높이 */
 .spread-btn-bg{
-  width:100%;height:auto;display:block;
-  max-height:58px;  /* 이미지 높이 제한 */
-  object-fit:fill;
+  width:100%;
+  height:72px;
+  display:block;
+  object-fit:cover;
+  object-position:left center;
+  border-radius:6px;
 }
-
+/* 텍스트 오버레이 — 해 이미지 오른쪽 여백에 */
 .spread-btn-inner{
   position:absolute;
-  top:0;left:0;right:0;bottom:0;
+  inset:0;
   display:flex;align-items:center;
-  padding:0 24px;
-  gap:12px;
+  /* 왼쪽 42%는 해 이미지, 오른쪽에 텍스트 */
+  padding:0 14px 0 42%;
+  gap:0;
 }
 .spread-btn-icon{
   font-size:22px;
-  color:#1a0c02;
+  color:var(--plat-shine);
   flex-shrink:0;
   width:28px;text-align:center;
-  opacity:.85;
   font-style:normal;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.6));
 }
 .spread-btn-text{
   flex:1;
-  display:flex;flex-direction:column;gap:3px;
+  display:flex;flex-direction:column;gap:2px;
   text-align:left;
 }
 .spread-btn-name{
   font-family:'Cinzel',serif;
-  font-size:12px;font-weight:600;
-  letter-spacing:.1em;
-  color:#2a1400;
+  font-size:11.5px;font-weight:700;
+  letter-spacing:.08em;
+  color:#2a1600;
   text-transform:uppercase;
-  text-shadow:0 1px 0 rgba(255,220,130,.5);
+  text-shadow:0 1px 0 rgba(255,220,140,.4);
 }
-
 .spread-btn-desc{
   font-family:'EB Garamond',serif;
   font-style:italic;
-  font-size:13px;
-  color:#3a1e08;
-  opacity:.9;
+  font-size:11px;
+  color:#3d2008;
+  opacity:1;
   letter-spacing:.01em;
 }
-
 .spread-btn-arr{
   font-size:12px;
-  color:#2a1400;
-  opacity:.5;
+  color:#5a3200;
+  opacity:.8;
   flex-shrink:0;
 }
-.spread-btn-arr-silver{ color:#1a1000; opacity:.65; }
+.spread-btn-arr-silver{ color:var(--platinum); opacity:.65; }
 
 /* ══════════════════════════════
    CARD DECK PICKER (공통)
@@ -470,11 +480,9 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   flex:1;display:flex;align-items:center;justify-content:center;
   overflow:hidden;padding:20px 0;
 }
-/* Single-card fan (1 card) */
 .cfm-single{
   display:flex;align-items:center;justify-content:center;
 }
-/* Three-card fan: swipe left/right on mobile */
 .cfm-fan-scroll{
   width:100%;overflow-x:auto;overflow-y:visible;
   -webkit-overflow-scrolling:touch;
@@ -516,7 +524,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 .cfm-card-name{font-family:'Cinzel',serif;font-size:7.5px;letter-spacing:.05em;color:var(--gold);text-align:center;text-transform:uppercase;line-height:1.3}
 .cfm-card-num{font-family:'Cinzel',serif;font-size:9px;color:var(--platinum)}
 
-/* counter badge */
 .cfm-counter{
   font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;
   color:var(--gold);text-align:center;padding:10px;flex-shrink:0;
@@ -534,21 +541,18 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 }
 .cfm-confirm{padding:12px 18px calc(12px + var(--safe-bottom));flex-shrink:0;border-top:1px solid rgba(200,184,130,.15)}
 
-/* ══ FAN CARD TILT (for today fan) ══ */
-
 /* save btn */
 .save-area{width:100%;max-width:360px;display:none}
 .save-area.show{display:block}
 
 /* ══════════════════════════════
-   심층분석 (켈틱 크로스)
+   심층분석 (3장)
 ══════════════════════════════ */
 #screen-celtic{background:var(--pur-deep)}
 .celtic-bg{position:absolute;inset:0;opacity:.35}
 .celtic-bg img{width:100%;height:100%;object-fit:cover}
 .celtic-inner{position:relative;z-index:1;padding:20px 16px 80px;display:flex;flex-direction:column;align-items:center;gap:18px}
 
-/* Celtic cross layout */
 .celtic-layout{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,auto);gap:6px;width:100%;max-width:360px}
 .cc-slot{display:flex;flex-direction:column;align-items:center;gap:5px}
 .cc-card{width:54px;height:88px;border-radius:5px;border:1.5px dashed rgba(200,184,130,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(45,27,78,.4);transition:all .3s;position:relative;overflow:hidden;flex-shrink:0}
@@ -564,7 +568,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 @keyframes ccFlip{0%{transform:rotateY(90deg) scale(.8);opacity:0}100%{transform:rotateY(0) scale(1);opacity:1}}
 .cc-label{font-family:'EB Garamond',serif;font-size:9px;font-style:italic;color:var(--platinum);opacity:.65;text-align:center;max-width:60px;line-height:1.3}
 
-/* celtic grid positions */
 .cc-pos-1{grid-column:2/4;grid-row:2/4;display:flex;align-items:center;justify-content:center}
 .cc-pos-1 .cc-card{width:62px;height:100px}
 .cc-pos-2{grid-column:2/4;grid-row:2/4;display:flex;align-items:center;justify-content:center;transform:rotate(90deg)}
@@ -580,7 +583,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 .cc-pos-10{grid-column:5;grid-row:1}
 .advice-badge{position:absolute;top:3px;right:3px;background:rgba(180,100,120,.7);border-radius:20px;padding:1px 5px;font-family:'Cinzel',serif;font-size:6px;color:#f0c8c8;letter-spacing:.05em}
 
-/* result panel */
 .celtic-result{background:linear-gradient(180deg,rgba(45,27,78,.95),rgba(20,10,32,.98));border-top:1px solid rgba(200,184,130,.25);padding:20px 18px;display:none;border-radius:6px;margin-top:8px}
 .celtic-result.show{display:block;animation:fuIn .4s ease}
 
@@ -624,7 +626,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 }
 .msg.roze .msg-bubble{background:linear-gradient(145deg,rgba(61,36,104,.8),rgba(45,27,78,.9));border:1px solid rgba(200,184,130,.2);color:var(--cream);border-bottom-left-radius:2px}
 .msg.user .msg-bubble{background:linear-gradient(145deg,rgba(200,184,130,.18),rgba(200,184,130,.1));border:1px solid rgba(200,184,130,.25);color:#e8dfc4;border-bottom-right-radius:4px}
-/* Roze message rich formatting */
 .roze-em{color:var(--gold);font-style:italic;letter-spacing:.02em}
 .roze-heading{
   font-family:'Cinzel',serif;font-size:12px;letter-spacing:.18em;
@@ -665,7 +666,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 .chat-send:active{transform:scale(.92)}
 .chat-card-suggest{
   display:flex;flex-wrap:wrap;gap:8px;
-  padding:6px 14px 8px 55px; /* 아바타(32px)+gap(9px)+bubble padding(14px) 맞춤 */
+  padding:6px 14px 8px 55px;
   background:rgba(20,10,38,.5);
   flex-shrink:0;position:relative;z-index:2;
 }
@@ -796,19 +797,17 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   <!-- ══ HOME ══ -->
   <div id="screen-home" class="screen active">
     <div class="home-bg">
-      <img src="https://i.imgur.com/kcuFavx.png" alt="">
+      <img src="https://i.imgur.com/Ao6JrbW.png" alt="">
       <div class="home-bg-ov"></div>
     </div>
     <div class="home-content">
-      <!-- 메인 로고 -->
+      <!-- 홈 메인 로고 -->
       <div class="home-logo-wrap">
-        <img class="home-logo" src="https://i.imgur.com/3sNQ8tv.png" alt="Roze Tarot">
+        <img class="home-logo" src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
       </div>
-
       <p class="home-tagline">당신의 운명을 읽는 시간</p>
       <div class="ornament"><span class="orn-star">✵</span></div>
 
-      <!-- 버튼 영역 — 이미지 버튼 -->
       <div class="home-btns">
         <button class="btn-img-gold" onclick="showScreen('read')">
           <img src="https://i.imgur.com/WbPw1lR.png" alt="" class="btn-img-bg">
@@ -824,9 +823,8 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 
   <!-- ══ READ (스프레드 선택) ══ -->
   <div id="screen-read" class="screen">
-    <div class="read-bg"><img src="https://i.imgur.com/kcuFavx.png" alt=""></div>
+    <div class="read-bg"><img src="https://i.imgur.com/Ao6JrbW.png" alt=""></div>
     <div class="app-bar">
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
       <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">READING</span>
     </div>
     <div class="scroll-body">
@@ -837,9 +835,8 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
         </div>
         <!-- 오늘의 카드 -->
         <button class="spread-btn" onclick="showScreen('today')">
-          <img src="https://i.imgur.com/wZAQoUY.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
-            <span class="spread-btn-icon">☽</span>
             <span class="spread-btn-text">
               <span class="spread-btn-name">오늘의 카드</span>
               <span class="spread-btn-desc">하루의 에너지와 방향을 읽습니다 · Yes / No</span>
@@ -850,9 +847,8 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 
         <!-- 상황 심층분석 -->
         <button class="spread-btn" onclick="showScreen('celtic')">
-          <img src="https://i.imgur.com/wZAQoUY.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
-            <span class="spread-btn-icon">⊕</span>
             <span class="spread-btn-text">
               <span class="spread-btn-name">상황 심층분석</span>
               <span class="spread-btn-desc">3장 배열 · 조언 카드는 로제가 선택합니다</span>
@@ -863,9 +859,8 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
 
         <!-- 로제와 상담 -->
         <button class="spread-btn" onclick="showScreen('chat')">
-          <img src="https://i.imgur.com/wZAQoUY.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
-            <span class="spread-btn-icon">❦</span>
             <span class="spread-btn-text">
               <span class="spread-btn-name">타로마스터 로제 상담</span>
               <span class="spread-btn-desc">깊이 있는 채팅 상담 · 카드 기반 해석</span>
@@ -881,8 +876,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   <div id="screen-today" class="screen">
     <div class="today-bg"><img src="https://i.imgur.com/5HinfXg.jpeg" alt=""></div>
     <div class="app-bar">
-      <button class="back-btn" onclick="showScreen('home')">❮</button>
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
+      <button class="back-btn" onclick="goBack()">❮</button>
       <div style="width:60px"></div>
     </div>
     <div class="scroll-body">
@@ -890,7 +884,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
         <p class="t-title">오늘의 카드</p>
         <div class="ornament max-w"><span class="orn-star">✵</span></div>
 
-        <!-- Yes/No toggle -->
         <div class="max-w">
           <p class="t-sub" style="font-size:13px;margin-bottom:8px">모드 선택</p>
           <div class="yn-toggle">
@@ -899,13 +892,10 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
           </div>
         </div>
 
-        <!-- Card draw area: Fan picker -->
         <div class="big-card-area max-w" style="align-items:center">
           <p class="t-sub" style="font-size:13px" id="today-instruction">카드 더미에서 한 장을 골라 오늘의 메시지를 받으세요</p>
           <div id="today-fan-area" style="width:100%;position:relative">
-            <!-- Fan cards rendered by JS -->
           </div>
-          <!-- Revealed card (hidden until pick) -->
           <div id="today-revealed-wrap" style="display:none;flex-direction:column;align-items:center;gap:14px">
             <div class="flip-wrapper" id="today-flip-wrapper">
               <div class="flip-inner" id="today-flip-inner">
@@ -932,8 +922,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   <div id="screen-celtic" class="screen">
     <div class="celtic-bg"><img src="https://i.imgur.com/5HinfXg.jpeg" alt=""></div>
     <div class="app-bar">
-      <button class="back-btn" onclick="showScreen('home')">❮</button>
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
+      <button class="back-btn" onclick="goBack()">❮</button>
       <div style="width:60px"></div>
     </div>
     <div class="scroll-body">
@@ -942,9 +931,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
         <p class="t-sub">3장 배열 · 상황 / 흐름 / 조언</p>
         <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:13px;color:var(--platinum);opacity:.7;text-align:center;line-height:1.6;max-width:300px;margin:0 auto">카드를 탭하여 더미에서 선택하세요<br><span style="color:rgba(200,150,150,.8)">⚘ 조언 카드는 로제가 선택합니다</span></p>
 
-        <div class="three-layout" id="three-layout">
-          <!-- filled by JS -->
-        </div>
+        <div class="three-layout" id="three-layout"></div>
 
         <div id="three-progress" style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;text-align:center;margin-top:4px">0 / 3 카드 선택</div>
 
@@ -958,12 +945,12 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
       <div class="three-result max-w" id="three-result" style="position:relative;z-index:2;margin:0 auto;padding:0 16px 20px"></div>
     </div>
   </div>
+
   <!-- ══ 채팅 ══ -->
   <div id="screen-chat" class="screen">
     <div class="chat-bg"><img src="https://i.imgur.com/Gn0bpBK.jpeg" alt=""></div>
     <div class="app-bar" style="flex-shrink:0">
-      <button class="back-btn" onclick="showScreen('home')">❮</button>
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
+      <button class="back-btn" onclick="goBack()">❮</button>
       <div style="width:60px"></div>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
@@ -978,7 +965,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   <div id="screen-deck" class="screen">
     <div class="deck-bg"><img src="https://i.imgur.com/Gn0bpBK.jpeg" alt=""></div>
     <div class="app-bar">
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
       <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">MAJOR ARCANA</span>
     </div>
     <div class="scroll-body">
@@ -993,7 +979,6 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   <div id="screen-settings" class="screen">
     <div class="settings-bg"><img src="https://i.imgur.com/Gn0bpBK.jpeg" alt=""></div>
     <div class="app-bar">
-      <img src="https://i.imgur.com/zaIpITA.png" alt="Roze Tarot">
       <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">SETTINGS</span>
     </div>
     <div class="scroll-body">
@@ -1208,7 +1193,6 @@ const CARDS = [
    advice:'성취를 충분히 축하하고 다음 단계로 자신 있게 나아가세요.'},
 ];
 
-// Celtic Cross position info
 const CELTIC_POSITIONS = [
   {id:0,label:'현재 상황',desc:'지금 이 순간의 핵심 에너지'},
   {id:1,label:'교차 (장애물/도움)',desc:'현재를 가로막거나 도와주는 힘',isRoze:false},
@@ -1244,6 +1228,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   buildSparkles();
   buildDeckGallery();
   buildThreeLayout();
+  document.body.classList.add('on-home'); // 초기 홈 상태
 });
 
 function buildSparkles(){
@@ -1260,7 +1245,12 @@ function buildSparkles(){
 // NAVIGATION
 // ════════════════════════════════
 const SCREEN_NAV = {home:'nav-home',read:'nav-read',today:'nav-read',celtic:'nav-read',chat:'nav-read',deck:'nav-deck',settings:'nav-settings'};
-function showScreen(id){
+let screenHistory = [];
+
+function showScreen(id, pushHistory=true){
+  if(pushHistory && currentScreen && currentScreen !== id){
+    screenHistory.push(currentScreen);
+  }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+id);
   if(el) el.classList.add('active');
@@ -1269,9 +1259,21 @@ function showScreen(id){
   if(navId) document.getElementById(navId).classList.add('active');
   currentScreen=id;
   el && (el.scrollTop=0);
+  // 홈일 때 body 클래스로 네비 투명 처리
+  if(id==='home') document.body.classList.add('on-home');
+  else document.body.classList.remove('on-home');
   if(id==='chat') { if(chatHistory.length===0) setTimeout(initChat,50); }
   if(id==='today') { todaySelected=false; setTimeout(initTodayFan, 80); }
   if(id==='celtic') { resetThree(); }
+}
+
+function goBack(){
+  if(screenHistory.length > 0){
+    const prev = screenHistory.pop();
+    showScreen(prev, false);
+  } else {
+    showScreen('home', false);
+  }
 }
 
 // ════════════════════════════════
@@ -1358,13 +1360,10 @@ function closeDeck(){
 let todayFanShuffled = [];
 
 function initTodayFan(){
-  // Shuffle all 22 cards
   todayFanShuffled = [...CARDS].sort(()=>Math.random()-.5);
   const area = document.getElementById('today-fan-area');
   const totalCards = todayFanShuffled.length;
-  const containerW = area.offsetWidth || 340;
 
-  // Build scrollable fan row
   area.innerHTML = '<div class="today-fan-container" id="today-fan-container">'
     + '<div class="today-fan-inner" id="today-fan-inner"></div>'
     + '</div>'
@@ -1375,7 +1374,6 @@ function initTodayFan(){
     const el = document.createElement('div');
     el.className = 'fan-card';
     el.id = 'fan-' + card.id;
-    // Slight tilt variation for natural feel
     const tilt = (i - totalCards/2) * 1.2;
     el.style.transform = `rotate(${tilt}deg)`;
     el.style.zIndex = i;
@@ -1389,18 +1387,15 @@ function pickTodayFanCard(card, el){
   todayCard = card;
   todaySelected = true;
 
-  // Animate: highlight picked card
   el.style.borderColor = 'var(--gold)';
   el.style.transform = 'translateY(-30px) scale(1.1) rotate(0deg)';
   el.style.boxShadow = '0 20px 40px rgba(0,0,0,.7), 0 0 24px rgba(200,184,130,.5)';
   el.style.zIndex = 50;
 
-  // Fade others
   document.querySelectorAll('.fan-card').forEach(fc => {
     if(fc !== el) fc.style.opacity = '0.25';
   });
 
-  // After short delay, show flip reveal
   setTimeout(() => {
     document.getElementById('today-fan-area').style.display = 'none';
     const revealWrap = document.getElementById('today-revealed-wrap');
@@ -1410,7 +1405,6 @@ function pickTodayFanCard(card, el){
       <div class="flip-back-num">${card.num}</div>
       <div class="flip-back-sym">${card.sym}</div>
       <div class="flip-back-name">${card.name}</div>`;
-    // Auto flip after brief moment
     setTimeout(() => {
       document.getElementById('today-flip-inner').classList.add('flipped');
       setTimeout(() => renderTodayMeaning(), 400);
@@ -1536,7 +1530,6 @@ function placeThreeCard(idx, card){
   const isRoze = THREE_POSITIONS[idx].isRoze;
 
   if(isRoze){
-    // 조언 카드: 뒷면으로만 표시 — 탭 시 공개
     slotEl.classList.add('filled');
     slotEl.dataset.cardId = card.id;
     slotEl.innerHTML = `
@@ -1653,7 +1646,7 @@ async function saveThreeImage(){
 
   frame.innerHTML = `
     <div style="text-align:center;margin-bottom:20px">
-      <img src="https://i.imgur.com/zaIpITA.png" style="width:160px">
+      
     </div>
     <div style="text-align:center;font-family:Cinzel Decorative,serif;font-size:16px;color:#f0e8d0;margin-bottom:16px">상황 심층분석 · 3장 배열</div>
     <div style="height:1px;background:linear-gradient(90deg,transparent,#c8b882,transparent);margin-bottom:20px"></div>
@@ -1673,10 +1666,8 @@ async function saveThreeImage(){
 }
 
 // ════════════════════════════════
-// CHAT — 로제 타로마스터 로컬 로직
+// CHAT
 // ════════════════════════════════
-
-// ── 상태 변수 ──
 let chatTurn        = 0;
 let chatReadingDone = false;
 let chatEnding      = false;
@@ -1685,9 +1676,6 @@ let chatFanSelected = [];
 let chatFanNeeded   = 0;
 let chatPendingText = '';
 
-// ══════════════════════════════════════
-// 초기화
-// ══════════════════════════════════════
 function initChat(){
   chatHistory     = [];
   chatCards       = [];
@@ -1696,15 +1684,11 @@ function initChat(){
   chatEnding      = false;
   chatFanSelected = [];
   document.getElementById('chat-messages').innerHTML = '';
-  // suggest 영역 초기화 (외부 div이므로 안전)
   const sug = document.getElementById('chat-card-suggest');
   if(sug){ sug.style.display='none'; sug.innerHTML=''; }
   rozeDelay('greeting_init', null, 400);
 }
 
-// ══════════════════════════════════════
-// 타이핑 딜레이 후 발화
-// ══════════════════════════════════════
 function rozeDelay(type, payload, delay){
   delay = delay || (700 + Math.random()*400);
   showTyping();
@@ -1717,18 +1701,13 @@ function rozeDelay(type, payload, delay){
   }, delay);
 }
 
-// ══════════════════════════════════════
-// 응답 매핑
-// ══════════════════════════════════════
 function getRozeReply(type, payload){
   switch(type){
-
     case 'greeting_init':
       return {
         text:'안녕하세요. 저는 타로마스터 로제입니다. 🌹\n\n별과 카드의 언어로 당신의 이야기에 귀를 기울이겠습니다.\n\n오늘 어떤 마음으로 찾아오셨나요?',
         chips:['연애 고민','직장·진로 고민','전반적인 운세','카드 뽑아보기']
       };
-
     case 'greeting':
       return {
         text:rPick([
@@ -1738,7 +1717,6 @@ function getRozeReply(type, payload){
         ]),
         chips:['카드 한 장 뽑기','고민 상담','오늘의 흐름 보기']
       };
-
     case 'nonsense':
       return {
         text:rPick([
@@ -1748,85 +1726,53 @@ function getRozeReply(type, payload){
         ]),
         chips:['그냥 답답해서요','카드 뽑아볼게요','네 괜찮아요']
       };
-
     case 'love':
       return {
         text:'연애와 관계는 타로가 가장 깊이 읽어내는 영역이에요.\n\n현재 어떤 상황이신가요?',
         chips:['현재 연인과의 관계','새로운 인연','짝사랑','이별 후 감정','카드 뽑기']
       };
-
     case 'love_current':
       return {
         text:'현재 연인과의 관계를 보고 싶으시군요.\n지금 관계에서 가장 마음에 걸리는 부분이 무엇인가요?\n카드가 그 답을 보여줄 거예요.',
         chips:['카드 1장 뽑기','카드 3장으로 깊게 보기']
       };
-
     case 'love_new':
       return {
         text:'새로운 인연에 대한 기대와 설렘이 느껴집니다.\n카드로 다가올 인연의 에너지를 읽어볼까요?',
         chips:['카드 1장 뽑기','카드 3장으로 깊게 보기']
       };
-
     case 'love_crush':
       return {
         text:'짝사랑은 마음이 가장 섬세해지는 순간이에요.\n그 상대방과의 가능성을 카드로 살펴볼 수 있어요.',
         chips:['카드 1장 뽑기','카드 3장으로 깊게 보기']
       };
-
     case 'love_breakup':
       return {
         text:'이별 후의 시간은 참 복잡하죠.\n카드가 지금 당신에게 필요한 메시지를 전해줄 거예요.',
         chips:['카드 1장 뽑기','카드 3장으로 깊게 보기']
       };
-
     case 'career':
       return {
         text:'직장과 진로는 현실적인 흐름을 보는 데 타로가 큰 도움이 됩니다.\n\n지금 가장 걱정되는 부분이 어떤 건가요?',
         chips:['현재 직장 분위기','이직·전직 고민','취업 준비','창업·새 도전','카드 뽑기']
       };
-
     case 'career_current':
-      return {
-        text:'지금 직장의 에너지를 카드로 읽어볼게요.\n어떤 부분이 가장 불안하거나 기대가 되시나요?',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'지금 직장의 에너지를 카드로 읽어볼게요.\n어떤 부분이 가장 불안하거나 기대가 되시나요?', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'career_change':
-      return {
-        text:'이직은 큰 결정이죠.\n카드가 지금 움직여야 할 때인지, 기다려야 할 때인지 알려줄 거예요.',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'이직은 큰 결정이죠.\n카드가 지금 움직여야 할 때인지, 기다려야 할 때인지 알려줄 거예요.', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'career_job':
-      return {
-        text:'취업 준비는 긴 여정이에요.\n카드로 지금 당신에게 필요한 에너지를 확인해봐요.',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'취업 준비는 긴 여정이에요.\n카드로 지금 당신에게 필요한 에너지를 확인해봐요.', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'career_start':
-      return {
-        text:'새로운 도전 앞에 서 계시군요.\n카드가 그 가능성과 주의할 점을 보여줄 거예요.',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'새로운 도전 앞에 서 계시군요.\n카드가 그 가능성과 주의할 점을 보여줄 거예요.', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'fortune':
       return {
         text:'전반적인 운세를 보고 싶으시군요.\n\n지금 이 시기, 특별히 신경 쓰이는 삶의 영역이 있으신가요?',
         chips:['카드에 맡길게요','금전·재물','건강','인간관계']
       };
-
     case 'money':
-      return {
-        text:'금전과 재물의 흐름은 현실적인 에너지와 깊이 연결됩니다.\n카드로 지금 재물의 흐름을 읽어볼까요?',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'금전과 재물의 흐름은 현실적인 에너지와 깊이 연결됩니다.\n카드로 지금 재물의 흐름을 읽어볼까요?', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'health':
-      return {
-        text:'건강은 모든 것의 기반이 되는 소중한 주제예요.\n카드로 지금 당신의 몸과 마음의 에너지를 살펴볼게요.',
-        chips:['카드 1장 뽑기','카드 3장으로 흐름 보기']
-      };
-
+      return { text:'건강은 모든 것의 기반이 되는 소중한 주제예요.\n카드로 지금 당신의 몸과 마음의 에너지를 살펴볼게요.', chips:['카드 1장 뽑기','카드 3장으로 흐름 보기'] };
     case 'stress':
       return {
         text:rPick([
@@ -1836,7 +1782,6 @@ function getRozeReply(type, payload){
         ]),
         chips:['카드 1장 뽑기','더 이야기하고 싶어요','괜찮아요']
       };
-
     case 'positive':
       return {
         text:rPick([
@@ -1846,139 +1791,80 @@ function getRozeReply(type, payload){
         ]),
         chips:['카드 뽑기','다른 주제로']
       };
-
     case 'confused':
       return {
         text:'방향을 찾기 어려운 시간이군요.\n그럴 때일수록 카드의 메시지가 힘이 됩니다.\n\n한 장 뽑아볼까요? ✦',
         chips:['카드 1장 뽑기','카드 3장으로 깊게 보기','더 이야기할게요']
       };
-
     case 'want_card_single':
-      return {
-        text:'카드 한 장이 오늘의 메시지를 전해드릴 거예요. ✦\n\n더미에서 마음이 끌리는 카드를 하나 골라주세요.',
-        chips:null
-      };
-
+      return { text:'카드 한 장이 오늘의 메시지를 전해드릴 거예요. ✦\n\n더미에서 마음이 끌리는 카드를 하나 골라주세요.', chips:null };
     case 'want_card_triple':
-      return {
-        text:'3장의 카드로 상황의 흐름을 읽어드릴게요. ✦\n\n과거의 원인 · 현재의 흐름 · 앞으로의 방향,\n마음이 이끄는 카드 3장을 순서대로 골라주세요.',
-        chips:null
-      };
-
+      return { text:'3장의 카드로 상황의 흐름을 읽어드릴게요. ✦\n\n과거의 원인 · 현재의 흐름 · 앞으로의 방향,\n마음이 이끄는 카드 3장을 순서대로 골라주세요.', chips:null };
     case 'card_reading_1': {
       const c = payload[0];
       chatReadingDone = true;
-      return {
-        text: buildSingleReading(c),
-        chips:['더 자세히 알고 싶어요','다른 카드 뽑기','고마워요']
-      };
+      return { text: buildSingleReading(c), chips:['더 자세히 알고 싶어요','다른 카드 뽑기','고마워요'] };
     }
-
     case 'card_reading_3': {
       chatReadingDone = true;
-      return {
-        text: buildTripleReading(payload),
-        chips:['더 자세히 알고 싶어요','다른 카드 뽑기','대화 마치기']
-      };
+      return { text: buildTripleReading(payload), chips:['더 자세히 알고 싶어요','다른 카드 뽑기','대화 마치기'] };
     }
-
     case 'card_deep': {
       const c = chatCards[chatCards.length - 1];
       if(!c) return { text:'어떤 카드에 대해 더 알고 싶으신가요?', chips:['카드 뽑기'] };
-      return {
-        text:`${c.sym} ${c.name}에 대해 조금 더 이야기하자면...\n\n${c.detail}\n\n### 조언\n${c.advice}`,
-        chips:['다른 카드 뽑기','고마워요','대화 마치기']
-      };
+      return { text:`${c.sym} ${c.name}에 대해 조금 더 이야기하자면...\n\n${c.detail}\n\n### 조언\n${c.advice}`, chips:['다른 카드 뽑기','고마워요','대화 마치기'] };
     }
-
     case 'acknowledge':
       if(chatCards.length > 0){
         return {
-          text:rPick([
-            '이 카드가 전하는 메시지가 도움이 되셨으면 합니다. 🌹\n더 궁금하신 부분이 있으신가요?',
-            '카드의 에너지를 잘 받아가시길 바랍니다. ✦\n다른 부분도 살펴볼까요?'
-          ]),
+          text:rPick(['이 카드가 전하는 메시지가 도움이 되셨으면 합니다. 🌹\n더 궁금하신 부분이 있으신가요?','카드의 에너지를 잘 받아가시길 바랍니다. ✦\n다른 부분도 살펴볼까요?']),
           chips:['더 자세히 알고 싶어요','다른 카드 뽑기','고마워요','대화 마치기']
         };
       }
       if(chatTurn >= 2){
-        return {
-          text:'카드를 한 장 뽑아서 지금 이 상황을 좀 더 살펴볼까요? ✦',
-          chips:['카드 1장 뽑기','카드 3장 뽑기','아니요 괜찮아요']
-        };
+        return { text:'카드를 한 장 뽑아서 지금 이 상황을 좀 더 살펴볼까요? ✦', chips:['카드 1장 뽑기','카드 3장 뽑기','아니요 괜찮아요'] };
       }
-      return {
-        text:'더 궁금한 부분이 있으시면 말씀해 주세요. 🌹',
-        chips:['연애','직장·진로','운세','카드 뽑기']
-      };
-
+      return { text:'더 궁금한 부분이 있으시면 말씀해 주세요. 🌹', chips:['연애','직장·진로','운세','카드 뽑기'] };
     case 'more_context':
       return {
         text:chatTurn >= 3 && chatCards.length === 0
           ? '이야기를 들으면서 카드를 통해 더 깊이 살펴보면 좋겠다는 생각이 드네요.\n한 장 뽑아보시겠어요? ✦'
-          : rPick([
-              '조금 더 이야기해 주세요. 어떤 부분이 가장 마음에 걸리시나요?',
-              '구체적인 상황을 알면 더 정확히 읽어드릴 수 있어요. 🌹'
-            ]),
-        chips: chatCards.length > 0
-          ? ['더 자세히 알고 싶어요','다른 카드 뽑기','고마워요']
-          : ['카드 1장 뽑기','카드 3장 뽑기']
+          : rPick(['조금 더 이야기해 주세요. 어떤 부분이 가장 마음에 걸리시나요?','구체적인 상황을 알면 더 정확히 읽어드릴 수 있어요. 🌹']),
+        chips: chatCards.length > 0 ? ['더 자세히 알고 싶어요','다른 카드 뽑기','고마워요'] : ['카드 1장 뽑기','카드 3장 뽑기']
       };
-
     case 'thanks':
       chatReadingDone = true;
       return {
-        text:rPick([
-          '별의 언어가 조금이나마 도움이 되었으면 합니다. 🌹\n언제든 다시 찾아주세요.',
-          '당신의 여정에 빛이 함께하길 바랍니다. ✦',
-          '오늘 이야기 나눌 수 있어서 좋았습니다. 🌹'
-        ]),
+        text:rPick(['별의 언어가 조금이나마 도움이 되었으면 합니다. 🌹\n언제든 다시 찾아주세요.','당신의 여정에 빛이 함께하길 바랍니다. ✦','오늘 이야기 나눌 수 있어서 좋았습니다. 🌹']),
         chips:['카드 한 장 더 뽑기','처음으로']
       };
-
     case 'farewell':
       chatEnding = true;
       return {
-        text:rPick([
-          '오늘 함께해 주셔서 감사합니다. 🌹\n별이 당신의 길을 밝혀주길 바랍니다.',
-          '다음에 또 이야기 나눠요. ✦ 좋은 하루 보내세요.',
-          '별과 카드가 언제나 당신 곁에 있습니다. 🌹 행운을 빌어요.'
-        ]),
+        text:rPick(['오늘 함께해 주셔서 감사합니다. 🌹\n별이 당신의 길을 밝혀주길 바랍니다.','다음에 또 이야기 나눠요. ✦ 좋은 하루 보내세요.','별과 카드가 언제나 당신 곁에 있습니다. 🌹 행운을 빌어요.']),
         chips:['처음으로','카드 다시 뽑기']
       };
-
     case 'nudge_farewell':
       return {
         text:'오늘 많은 이야기를 나눴네요. 🌹\n더 궁금한 것이 있으신가요, 아니면 오늘은 여기서 마무리할까요?',
         chips:['카드 한 장 더 뽑기','마무리할게요','처음으로']
       };
-
     default:
       return {
-        text:rPick([
-          '무슨 말씀인지 조금 더 자세히 이야기해 주시겠어요? 🌹',
-          '그 부분에 대해 카드와 함께 살펴볼까요? ✦',
-          '더 구체적으로 말씀해 주시면 더 잘 이해할 수 있어요. 🌹'
-        ]),
+        text:rPick(['무슨 말씀인지 조금 더 자세히 이야기해 주시겠어요? 🌹','그 부분에 대해 카드와 함께 살펴볼까요? ✦','더 구체적으로 말씀해 주시면 더 잘 이해할 수 있어요. 🌹']),
         chips:['카드 뽑기','연애','직장·진로','처음으로']
       };
   }
 }
 
-// ══════════════════════════════════════
-// 입력 분류 엔진 (확장판)
-// ══════════════════════════════════════
 function classifyInput(raw){
   const t  = raw.trim();
   const tl = t.toLowerCase().replace(/\s+/g,' ');
   const ln = t.length;
-
-  // ── 의미없는 입력 ──
   if(ln === 0) return 'nonsense';
-  if(/^[\u3131-\u314e]+$/.test(t)) return 'nonsense';     // 자음만
-  if(/^[\u314f-\u3163]+$/.test(t)) return 'nonsense';     // 모음만
-  if(ln <= 20 && /^(.)\1{2,}$/.test(t)) return 'nonsense'; // 동일문자반복
-  if(/^[\uffff\u3160\u3154\u3157]{2,}$/.test(t)) return 'nonsense'; // ㅋㅎㅠㅜ
+  if(/^[\u3131-\u314e]+$/.test(t)) return 'nonsense';
+  if(/^[\u314f-\u3163]+$/.test(t)) return 'nonsense';
+  if(ln <= 20 && /^(.)\1{2,}$/.test(t)) return 'nonsense';
   if(/^[ㅋ]{2,}$/.test(t) || /^[ㅎ]{2,}$/.test(t)) return 'nonsense';
   if(/^[ㅠ]+$/.test(t) || /^[ㅜ]+$/.test(t)) return 'nonsense';
   if(/^[ㄷ]{2,}$/.test(t)) return 'nonsense';
@@ -1986,7 +1872,6 @@ function classifyInput(raw){
   if(/^[a-z]{1,3}$/i.test(t) && !/^(hi|ok|no|yes|bye|hey)$/i.test(t)) return 'nonsense';
   if(/^[0-9\s]+$/.test(t) && ln < 6) return 'nonsense';
 
-  // ── 칩 exact match (우선 처리) ──
   const exact = {
     '연애 고민':'love','직장·진로 고민':'career','직장·진로':'career',
     '전반적인 운세':'fortune','운세':'fortune',
@@ -2010,64 +1895,32 @@ function classifyInput(raw){
     '아니요 괜찮아요':'acknowledge','네 괜찮아요':'acknowledge','괜찮아요':'acknowledge',
     '그냥 답답해서요':'stress','더 이야기하고 싶어요':'more_context',
     '더 이야기할게요':'more_context','오늘의 흐름 보기':'want_card_single',
-    '고민 상담':'more_context','카드에 맡길게요':'want_card_single',
-    '카드 한 장 더 뽑기':'want_card_single',
+    '고민 상담':'more_context','카드 한 장 더 뽑기':'want_card_single',
   };
   if(exact[t]) return exact[t];
 
-  // ── 인사 ──
   if(/^(안녕|하이|헬로|hello|hi|hey|yo|헤이|ㅎㅇ|방가|반가워|반갑|처음이에요|처음 왔|또왔|다시왔|왔어요|왔습니다|오랜만|출석|접속|안냥|로제야|로제 있|로제님|저 왔|오늘도 왔)/i.test(tl)) return 'greeting';
-
-  // ── 종료 ──
   if(/(안녕히|잘 가|잘가요|바이|바잉|bye|goodbye|see you|씨유|끝났어|상담 끝|나갈게|로그아웃|다음에 봐|이따봐|내일봐|또봐|이제 그만|그만 볼게|나 이만)/i.test(tl)) return 'farewell';
   if(/(대화.*마치|상담.*끝|여기서.*끝|이만.*할게|오늘은.*여기|마무리|종료할)/i.test(tl)) return 'farewell';
-
-  // ── 감사 ──
   if(/(고마워|고맙습|감사합|감사해|땡큐|thank|수고해|수고했|덕분에|도움이 됐|도움됐|잘 알겠|유익했|좋은 상담|상담 감사|완벽했|최고였|굿|good job)/i.test(tl)) return 'thanks';
-
-  // ── 연애·관계 ──
   if(/(연애|사랑|좋아하는 사람|남자친구|여자친구|남친|여친|남사친|여사친|애인|연인|파트너|썸|썸남|썸녀|이별|헤어졌|헤어질|재회|복연|고백|프로포즈|결혼|동거|데이트|소개팅|미팅|연락이 없|연락을 안|연락 두절|전남친|전여친|전 남자|전 여자|전애인|외도|바람|불륜|삼각관계|질투|차였|차일|관계가 소원|관계 개선|좋아해|사랑받고|밀당|감정 정리|감정이 복잡|마음을 모르|마음을 알고|마음을 확인)/i.test(tl)) return 'love';
-
-  // ── 직장·진로·학업 ──
-  if(/(직장|회사|직업|취업|취직|이직|퇴사|사직|커리어|진로|창업|사업|업무|상사|팀장|사장|동료|면접|합격|불합격|탈락|연봉|월급|급여|승진|발령|프리랜서|알바|아르바이트|부업|투잡|학교|전공|대학|공무원|시험|자격증|공부|고시|수능|편입|임용|직종|이 일이|이 회사|이 직장|계속 다녀야|그만둬야|일이 맞지|적성에 안|적성에 맞|resign|quit|job|career|work)/i.test(tl)) return 'career';
-
-  // ── 금전 ──
+  if(/(직장|회사|직업|취업|취직|이직|퇴사|사직|커리어|진로|창업|사업|업무|상사|팀장|사장|동료|면접|합격|불합격|탈락|연봉|월급|급여|승진|발령|프리랜서|알바|아르바이트|부업|투잡|학교|전공|대학|공무원|시험|자격증|공부|고시|수능|편입|임용|직종|이 일이|이 회사|이 직장|계속 다녀야|그만둬야|일이 맞지|적성에 안|적성에 맞)/i.test(tl)) return 'career';
   if(/(돈이|돈 문제|돈 걱정|금전|재물|재정|저축|투자|주식|코인|빚|대출|부채|적금|수입|지출|가난|부자|경제적|재테크|손해|사기|횡재|복권|벌이|생활비|월세|전세|집값|부동산|통장|카드값|빚 갚|돈 벌)/i.test(tl)) return 'money';
-
-  // ── 건강 ──
   if(/(건강|몸이|병원|아프|아파|치료|다이어트|체력|수면|불면|스트레스 받|우울증|공황|불안장애|번아웃|탈진|식욕|의욕이 없|무기력|몸이 안|회복|쉬고 싶|피곤|피로)/i.test(tl)) return 'health';
-
-  // ── 운세·사주 ──
   if(/(운세|내 운|사주|미래|앞날|운명|숙명|올해 운|앞으로 어떻|전망|점을|점괘|신년운|월운|오늘 운|오늘의 운|타로로 봐|팔자)/i.test(tl)) return 'fortune';
-
-  // ── 스트레스·부정 감정 ──
-  if(/(힘들어|힘드네|힘들었|너무 힘|어렵네|지쳐서|지쳤어|우울해|우울한|슬퍼|슬프다|외로워|외롭다|괴로워|괴롭다|불안해|불안하다|걱정돼|무서워|두려워|무기력|허탈|공허|답답해|막막해|어쩌지|어떡해|죽고 싶|포기하고|싫어|짜증나|화가|속상|상처|눈물|힘이 없|자신이 없|자존감|자책|후회|죄책감|sad|depressed|tired|anxious|stressed|hopeless)/i.test(tl)) return 'stress';
-
-  // ── 긍정 감정 ──
-  if(/(기뻐|기쁘다|행복해|즐거워|설레|기대돼|신나|잘됐어|성공했|합격했|붙었어|좋은 소식|좋아졌|나아졌|대박났|잘 풀렸|뿌듯|감동받|happy|excited|great|awesome)/i.test(tl)) return 'positive';
-
-  // ── 혼란·결정 ──
+  if(/(힘들어|힘드네|힘들었|너무 힘|어렵네|지쳐서|지쳤어|우울해|우울한|슬퍼|슬프다|외로워|외롭다|괴로워|괴롭다|불안해|불안하다|걱정돼|무서워|두려워|무기력|허탈|공허|답답해|막막해|어쩌지|어떡해|죽고 싶|포기하고|싫어|짜증나|화가|속상|상처|눈물|힘이 없|자신이 없|자존감|자책|후회|죄책감)/i.test(tl)) return 'stress';
+  if(/(기뻐|기쁘다|행복해|즐거워|설레|기대돼|신나|잘됐어|성공했|합격했|붙었어|좋은 소식|좋아졌|나아졌|대박났|잘 풀렸|뿌듯|감동받)/i.test(tl)) return 'positive';
   if(/(모르겠어|뭔지 모르|뭘 해야|어떡해야|어떻게 해야|방향을 모르|선택이 어렵|결정을 못|고민이 많|어느 쪽|갈림길|둘 중에|어떤 걸|판단이 안|망설여|확신이 없|혼란스럽|뭘 골라야|선택지가)/i.test(tl)) return 'confused';
-
-  // ── 카드 요청 ──
-  if(/(카드 뽑|뽑아줘|한 장만|한장|1장|뽑고 싶|뽑어봐|뽑아볼|봐줘|보여줘|읽어줘|draw|pull|pick.*card|오늘의 카드|카드로 봐|타로 봐|타로 뽑|운 봐|운세 봐)/i.test(tl)){
-    if(/(3장|세 장|three|심층|깊게 봐|흐름을 봐|전체적으로|과거.*미래|3개)/i.test(tl)) return 'want_card_triple';
+  if(/(카드 뽑|뽑아줘|한 장만|한장|1장|뽑고 싶|뽑어봐|뽑아볼|봐줘|보여줘|읽어줘|오늘의 카드|카드로 봐|타로 봐|타로 뽑|운 봐|운세 봐)/i.test(tl)){
+    if(/(3장|세 장|심층|깊게 봐|흐름을 봐|전체적으로|과거.*미래|3개)/i.test(tl)) return 'want_card_triple';
     return 'want_card_single';
   }
-
-  // ── 수긍·짧은 반응 ──
   if(/^(네|예|응|어|맞아|맞아요|그래|알겠어|알겠습|좋아|좋아요|그렇구나|그렇군요|오|아|헐|와|진짜|정말|그런가|맞네|오호|아하|그렇군|그렇죠|맞죠|그렇네요|음|흠|허|오오|와우|ㅇㅋ|ok|okay|yep|yeah)[\s~!?.]*$/i.test(t)) return 'acknowledge';
   if(/^(아니|아니요|아니오|no|nope|싫어요|됐어|안 할게요|안 할래요|그냥 있을게요)[\s~!?.]*$/i.test(t)) return 'acknowledge';
-
-  // ── 심화 요청 ──
   if(/(더 자세히|더 구체적|더 알고|더 설명|심층|어떤 의미|무슨 뜻|왜 그런|어떻게 해석|그 카드|이 카드|저 카드)/i.test(tl) && chatCards.length > 0) return 'card_deep';
-
   return 'more_context';
 }
 
-// ══════════════════════════════════════
-// 카드 해석 텍스트 생성
-// ══════════════════════════════════════
 function buildSingleReading(c){
   return `${c.sym} ${c.name}  (Arcana ${c.num})\n\n${c.meaning}\n\n### 지금 당신에게\n${c.advice}\n\n키워드: ${c.keywords.join(' · ')}`;
 }
@@ -2081,7 +1934,6 @@ function buildTripleReading(cards){
   else if(positives===0) verdict = '지금은 신중하게 행동할 때입니다. 내면의 목소리에 귀 기울여 보세요.';
   else if(positives>=2)  verdict = '흐름은 당신 편입니다. 현재 상황에 집중하면 좋은 결과가 보일 거예요.';
   else                   verdict = '변화의 기로에 서 있는 것 같습니다. ' + cc.advice;
-
   return `3장의 카드가 이야기를 전합니다. ✦\n\n`+
     `### 과거의 원인\n${a.sym} ${a.name}: ${a.meaning}\n\n`+
     `### 현재의 흐름\n${b.sym} ${b.name}: ${b.meaning}\n\n`+
@@ -2089,9 +1941,6 @@ function buildTripleReading(cards){
     verdict;
 }
 
-// ══════════════════════════════════════
-// 메인 sendChat
-// ══════════════════════════════════════
 function sendChat(){
   const inp  = document.getElementById('chat-input');
   const text = inp.value.trim();
@@ -2099,16 +1948,13 @@ function sendChat(){
   inp.value = '';
   inp.style.height = 'auto';
   const sugArea = document.getElementById('chat-card-suggest');
-  if(sugArea){ sugArea.style.display = 'none'; sugArea.innerHTML = ''; }
+  if(sugArea){ sugArea.style.display='none'; sugArea.innerHTML=''; }
   addUserMessage(text);
 
   const type = classifyInput(text);
-
-  // 특수 액션
   if(type === '__restart__'){ initChat(); return; }
   if(type === '__restart_cards__'){ chatCards=[]; chatReadingDone=false; rozeDelay('greeting_init'); return; }
 
-  // 카드 뽑기 분기
   if(type === 'want_card_single'){
     rozeDelay('want_card_single', null, 600);
     setTimeout(()=> openChatFanModal('single', text), 1600);
@@ -2119,20 +1965,14 @@ function sendChat(){
     setTimeout(()=> openChatFanModal('triple', text), 1800);
     return;
   }
-
-  // 종료 유도 (8턴 이상 + 해석 완료)
   if(chatTurn >= 8 && chatReadingDone && !chatEnding && type !== 'farewell'){
     chatEnding = true;
     rozeDelay('nudge_farewell', null, 500);
     return;
   }
-
   rozeDelay(type, text);
 }
 
-// ══════════════════════════════════════
-// 카드 팬 모달
-// ══════════════════════════════════════
 function openChatFanModal(mode, pendingText){
   chatFanMode     = mode;
   chatFanSelected = [];
@@ -2177,11 +2017,9 @@ function toggleChatFanCard(card, el){
     if(chatFanSelected.length >= chatFanNeeded) return;
     chatFanSelected.push(card);
     el.classList.add('selected');
-    // 앞면 완전 비공개 — 뒷면 그대로 유지
     el.innerHTML = '<div class="cfm-card-back-mark">✦</div>';
   }
   document.getElementById('cfm-counter').textContent = `${chatFanSelected.length} / ${chatFanNeeded} 선택`;
-  // 선택 목록도 심볼만 표시
   document.getElementById('cfm-selected-list').innerHTML =
     chatFanSelected.map((_,i)=>`<div class="cfm-selected-chip">✦ ${i+1}번째 카드</div>`).join('');
   document.getElementById('cfm-confirm-btn').style.display =
@@ -2219,10 +2057,8 @@ function closeChatFan(){
   }, 500);
 }
 
-// ── 유틸 ──
 function rPick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
 
-// ── 포맷 ──
 function formatRozeText(text){
   let t = text;
   t = t.replace(/\*\*([^*]+)\*\*/g, '<span class="roze-em">$1</span>');
@@ -2306,14 +2142,13 @@ function chatKeydown(e){
 async function saveAsImage(type){
   let target;
   if(type==='today'){
-    // Build a capture element
     const c=todayCard;
     if(!c)return;
     const frame=document.getElementById('save-frame');
     frame.style.cssText='position:fixed;left:-9999px;top:0;width:375px;background:#1a0f2e;padding:40px 28px;font-family:EB Garamond,serif;';
     frame.innerHTML=`
       <div style="text-align:center;margin-bottom:24px">
-        <img src="https://i.imgur.com/zaIpITA.png" style="width:180px;filter:drop-shadow(0 2px 12px rgba(200,184,130,.5))">
+        
       </div>
       <div style="text-align:center;font-family:Cinzel Decorative,serif;font-size:18px;color:#f0e8d0;margin-bottom:8px">오늘의 카드</div>
       <div style="height:1px;background:linear-gradient(90deg,transparent,#c8b882,transparent);margin:12px 0"></div>
@@ -2345,9 +2180,6 @@ async function saveAsImage(type){
 
 async function saveCelticImage(){ saveThreeImage(); }
 
-// ════════════════════════════════
-// MISC
-// ════════════════════════════════
 function clearHistory(){
   if(confirm('모든 리딩 기록을 삭제할까요?')){
     localStorage.clear();
