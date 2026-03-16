@@ -26,6 +26,7 @@ body{font-family:'EB Garamond',serif;color:var(--text-light);position:relative}
   overflow-y:auto;overflow-x:hidden;
   display:none;
   flex-direction:column;
+  z-index:0;
 }
 .screen.active{
   display:flex;
@@ -150,9 +151,20 @@ body.on-home #bottom-nav .nav-btn .nl{ color:rgba(200,184,130,.55); }
 body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
 /* ══ SPARKLES ══ */
-#sparkles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.sp{position:absolute;width:2px;height:2px;background:var(--gold);border-radius:50%;opacity:0;animation:spk var(--d) var(--dl) ease-in-out infinite}
-@keyframes spk{0%,100%{opacity:0;transform:scale(0)}50%{opacity:.7;transform:scale(2)}}
+#sparkles{position:fixed;inset:0;pointer-events:none;z-index:10;overflow:hidden;opacity:0;transition:opacity .8s ease}
+body.on-home #sparkles{opacity:1}
+/* 둥근 파티클 */
+.sp{position:absolute;border-radius:50%;opacity:0;animation:spk var(--d) var(--dl) ease-in-out infinite}
+@keyframes spk{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}45%{opacity:var(--op,0.8);transform:scale(1) rotate(180deg)}55%{opacity:var(--op,0.8);transform:scale(1) rotate(180deg)}100%{opacity:0;transform:scale(0) rotate(360deg)}}
+/* 십자 빛줄기 */
+.sp-cross{position:absolute;opacity:0;animation:spkCross var(--d) var(--dl) ease-in-out infinite}
+.sp-cross::before,.sp-cross::after{content:'';position:absolute;background:var(--sc,rgba(200,184,130,.9));border-radius:2px}
+.sp-cross::before{width:var(--sz,12px);height:1px;top:50%;left:50%;transform:translate(-50%,-50%)}
+.sp-cross::after{width:1px;height:var(--sz,12px);top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes spkCross{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}40%{opacity:var(--op,.9);transform:scale(1) rotate(45deg)}60%{opacity:var(--op,.9);transform:scale(1) rotate(45deg)}100%{opacity:0;transform:scale(0) rotate(90deg)}}
+/* 다이아 */
+.sp-dia{position:absolute;opacity:0;animation:spkDia var(--d) var(--dl) ease-in-out infinite;transform-origin:center}
+@keyframes spkDia{0%,100%{opacity:0;transform:scale(0) rotate(45deg)}45%{opacity:var(--op,.7);transform:scale(1) rotate(45deg)}55%{opacity:var(--op,.7);transform:scale(1) rotate(45deg)}}
 
 /* ══════════════════════════════
    HOME SCREEN
@@ -172,10 +184,12 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .home-content{
   position:relative;z-index:2;
   display:flex;flex-direction:column;align-items:center;
-  gap:22px;padding:0 24px 24px;
+  gap:18px;padding:0 24px 0;
   animation:fuIn 1.2s ease both;
   width:100%;min-height:100%;
-  justify-content:center;
+  justify-content:flex-start;
+  padding-top:max(110px,30vh);
+  padding-bottom:0;
 }
 @keyframes fuIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
@@ -233,10 +247,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .home-tagline{
   font-family:'EB Garamond',serif;
   font-style:italic;
-  font-size:16px;letter-spacing:.12em;
-  color:#e8dfc4;
+  font-size:15px;letter-spacing:.06em;
+  color:rgba(200,184,130,.65);
   opacity:1;
-  text-shadow:0 1px 8px rgba(0,0,0,.7);
 }
 
 /* ══ 홈 이미지 버튼 ══ */
@@ -247,10 +260,16 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   width:100%;
   border:none;background:none;padding:0;cursor:pointer;
   display:block;
-  transition:transform .2s ease,filter .2s ease;
+  transition:transform .15s cubic-bezier(.2,0,.2,1),filter .15s ease,box-shadow .15s ease;
+  -webkit-tap-highlight-color:transparent;
 }
-.btn-img-gold:active,.btn-img-silver:active{
-  transform:scale(.97);filter:brightness(.9);
+.btn-img-gold:active{
+  transform:scale(.95);
+  filter:brightness(1.15) drop-shadow(0 0 12px rgba(200,184,130,.8));
+}
+.btn-img-silver:active{
+  transform:scale(.95);
+  filter:brightness(1.1) drop-shadow(0 0 10px rgba(200,184,130,.6));
 }
 .btn-img-bg{
   width:100%;height:auto;display:block;
@@ -279,8 +298,8 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    READ SCREEN (스프레드 선택)
 ══════════════════════════════ */
 #screen-read{background:var(--pur-deep)}
-.read-bg{position:absolute;inset:0;opacity:.55}
-.read-bg img{width:100%;height:100%;object-fit:cover}
+.read-bg{position:fixed;inset:0;z-index:0}
+.read-bg img{width:100%;height:100%;object-fit:cover;object-position:center top}
 .spread-list{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
 
 /* ── 스프레드 버튼: CSS 버튼, 이미지는 배경 장식만 ── */
@@ -304,9 +323,8 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .spread-btn-inner{
   position:absolute;
   inset:0;
-  display:flex;align-items:center;
-  /* 왼쪽 42%는 해 이미지, 오른쪽에 텍스트 */
-  padding:0 14px 0 38%;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 20px;
   gap:0;
 }
 .spread-btn-icon{
@@ -319,24 +337,26 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 }
 .spread-btn-text{
   flex:1;
-  display:flex;flex-direction:column;gap:2px;
-  text-align:left;
+  display:flex;flex-direction:column;gap:4px;
+  text-align:center;
 }
 .spread-btn-name{
-  font-family:'Cormorant Garamond',serif;
+  font-family:'Cinzel',serif;
   font-size:14px;font-weight:600;
-  letter-spacing:.06em;
-  color:#2a1600;
+  letter-spacing:.12em;
+  color:#fff8e8;
   text-transform:none;
-  font-style:italic;
+  font-style:normal;
+  text-shadow:0 2px 8px rgba(0,0,0,1),0 0 20px rgba(0,0,0,.9);
 }
 .spread-btn-desc{
-  font-family:'Cormorant Garamond',serif;
-  font-style:normal;
-  font-size:11.5px;
-  color:#3d2008;
+  font-family:'EB Garamond',serif;
+  font-style:italic;
+  font-size:12px;
+  color:rgba(240,224,180,.9);
   opacity:1;
-  letter-spacing:.02em;
+  letter-spacing:.03em;
+  text-shadow:0 1px 6px rgba(0,0,0,1),0 0 10px rgba(0,0,0,.8);
 }
 .spread-btn-arr{
   font-size:12px;
@@ -506,7 +526,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    오늘의 카드
 ══════════════════════════════ */
 #screen-today{background:var(--pur-deep)}
-.today-bg{position:absolute;inset:0;opacity:.45}
+.today-bg{position:fixed;inset:0;opacity:.45}
 .today-bg img{width:100%;height:100%;object-fit:cover}
 .today-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:24px 20px 80px;gap:20px;flex:1;overflow:visible;min-height:0}
 .yn-toggle{display:flex;gap:0;border:1px solid rgba(200,184,130,.3);border-radius:3px;overflow:hidden;margin-top:4px}
@@ -543,7 +563,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .today-fan-container{
   width:100%;
   overflow:visible;
-  padding:44px 0 10px;
+  padding:56px 0 10px;
 }
 .today-fan-scroll{
   width:100%;overflow-x:auto;overflow-y:visible;
@@ -557,7 +577,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   display:flex;flex-direction:row;
   align-items:flex-end;
   gap:-18px;
-  padding:4px 20px 8px;
+  padding:50px 20px 8px;
   width:max-content;
   min-width:100%;
   justify-content:center;
@@ -600,6 +620,22 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
 /* 오늘의 카드 — 카드 잘림 방지 */
 .today-screen .scroll-body{overflow-x:visible;overflow-y:auto}
+
+/* ══ 카카오 버튼 ══ */
+.btn-kakao{
+  width:100%;max-width:360px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 20px;
+  background:linear-gradient(135deg,#2a1a4e,#3d2468);
+  border:1px solid rgba(200,184,130,.35);
+  border-radius:6px;
+  font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;
+  color:rgba(240,224,180,.92);
+  cursor:pointer;
+  transition:all .2s;
+  margin-top:8px;
+}
+.btn-kakao:active{transform:scale(.97);filter:brightness(1.1);}
 /* ══ CHAT FAN MODAL ══ */
 #chat-fan-modal{
   position:fixed;inset:0;z-index:250;
@@ -691,7 +727,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    심층분석 (3장)
 ══════════════════════════════ */
 #screen-celtic{background:var(--pur-deep)}
-.celtic-bg{position:absolute;inset:0;opacity:.35}
+.celtic-bg{position:fixed;inset:0;opacity:.35}
 .celtic-bg img{width:100%;height:100%;object-fit:cover}
 .celtic-inner{position:relative;z-index:1;padding:20px 16px 80px;display:flex;flex-direction:column;align-items:center;gap:18px}
 
@@ -729,14 +765,15 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 .celtic-result.show{display:block;animation:fuIn .4s ease}
 
 /* ══ THREE CARD LAYOUT ══ */
-.three-layout{display:flex;gap:12px;justify-content:center;align-items:flex-start;width:100%;max-width:360px;padding:12px 0}
-.three-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:100px}
+.three-layout{display:flex;gap:12px;justify-content:center;align-items:flex-start;width:100%;max-width:360px;padding:12px 0;min-height:220px}
+.three-col{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;max-width:100px;position:relative}
 .three-card{
-  width:82px;height:136px;border-radius:7px;
+  width:82px;height:136px;min-height:136px;border-radius:7px;
   border:1.5px dashed rgba(200,184,130,.3);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;background:rgba(45,27,78,.4);
   transition:all .3s;position:relative;overflow:hidden;
+  flex-shrink:0;
 }
 .three-card:active{border-color:var(--gold);transform:scale(.95)}
 .three-card .cc-inner{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 6px;height:100%;width:100%}
@@ -756,7 +793,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    타로마스터 로제 채팅
 ══════════════════════════════ */
 #screen-chat{background:var(--pur-deep);overflow:hidden;display:flex;flex-direction:column}
-.chat-bg{position:absolute;inset:0;opacity:.25}
+.chat-bg{position:fixed;inset:0;opacity:.25}
 .chat-bg img{width:100%;height:100%;object-fit:cover}
 .chat-messages{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 14px;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
 .msg{display:flex;gap:9px;max-width:90%;animation:fuIn .35s ease}
@@ -828,7 +865,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    덱 스크린 (카드 갤러리)
 ══════════════════════════════ */
 #screen-deck{background:var(--pur-deep)}
-.deck-bg{position:absolute;inset:0;opacity:.35}
+.deck-bg{position:fixed;inset:0;opacity:.35}
 .deck-bg img{width:100%;height:100%;object-fit:cover}
 .deck-gallery{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 14px;position:relative;z-index:1}
 .gallery-card{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
@@ -847,7 +884,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
    설정 스크린
 ══════════════════════════════ */
 #screen-settings{background:var(--pur-deep)}
-.settings-bg{position:absolute;inset:0;opacity:.3}
+.settings-bg{position:fixed;inset:0;opacity:.3}
 .settings-bg img{width:100%;height:100%;object-fit:cover}
 .settings-inner{position:relative;z-index:1;padding:20px 18px;display:flex;flex-direction:column;gap:16px}
 .settings-section{background:rgba(45,27,78,.5);border:1px solid rgba(200,184,130,.2);border-radius:6px;overflow:hidden}
@@ -955,9 +992,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
           <img src="https://i.imgur.com/WbPw1lR.png" alt="" class="btn-img-bg">
           <span class="btn-img-label">타로 읽기 시작</span>
         </button>
-        <button class="btn-img-silver" onclick="showScreen('deck')">
+        <button class="btn-img-silver" onclick="startChatShuffle()">
           <img src="https://i.imgur.com/DWSGAIb.png" alt="" class="btn-img-bg">
-          <span class="btn-img-label silver">카드 덱 보기</span>
+          <span class="btn-img-label silver">1:1 상담 받기</span>
         </button>
       </div>
     </div>
@@ -965,7 +1002,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
   <!-- ══ READ (스프레드 선택) ══ -->
   <div id="screen-read" class="screen">
-    <div class="read-bg"><img src="https://i.imgur.com/Ao6JrbW.png" alt=""></div>
+    <div class="read-bg"><img src="https://i.imgur.com/lXxy48G.png" alt=""><div class="home-bg-ov"></div></div>
     <div class="app-bar">
       <button class="back-btn" onclick="goBack()">❮</button>
       <span style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:.22em;color:var(--gold);text-transform:uppercase">Reading</span>
@@ -979,7 +1016,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
         </div>
         <!-- 오늘의 카드 -->
         <button class="spread-btn" onclick="startTodayShuffle()">
-          <img src="https://i.imgur.com/UGLZx5U.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/WoEn4JN.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
               <span class="spread-btn-name">오늘의 카드</span>
@@ -991,7 +1028,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
         <!-- 상황 심층분석 -->
         <button class="spread-btn" onclick="openQuestionModal('celtic')">
-          <img src="https://i.imgur.com/ztdzVat.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/WoEn4JN.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
               <span class="spread-btn-name">상황 심층분석</span>
@@ -1003,7 +1040,7 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
 
         <!-- 로제와 상담 -->
         <button class="spread-btn" onclick="startChatShuffle()">
-          <img src="https://i.imgur.com/Sq6qEWn.png" alt="" class="spread-btn-bg">
+          <img src="https://i.imgur.com/WoEn4JN.png" alt="" class="spread-btn-bg">
           <span class="spread-btn-inner">
             <span class="spread-btn-text">
               <span class="spread-btn-name">타로마스터 로제의 상담</span>
@@ -1058,6 +1095,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
         <div class="save-area max-w" id="today-save-area">
           <button class="btn-ghost" onclick="saveAsImage('today')">🖼 이미지로 저장</button>
         </div>
+        <div id="today-kakao-wrap" style="display:none;width:100%;max-width:360px;padding:0 0 4px"><button class="btn-kakao max-w" onclick="openChannelTalk()">
+  <span style="font-size:16px">💬</span> 로제와 직접 소통하기
+</button></div>
         <button class="btn-ghost max-w" id="today-reset-btn" onclick="resetToday()" style="display:none">다시 뽑기</button>
       </div>
     </div>
@@ -1104,6 +1144,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
     </div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-card-suggest" id="chat-card-suggest" style="display:none"></div>
+    <div style="padding:8px 14px 0;flex-shrink:0;position:relative;z-index:10">
+      <button class="btn-kakao" style="width:100%;max-width:100%;margin-top:0" onclick="openChannelTalk()"><span style="font-size:16px">💬</span> 로제와 직접 소통하기</button>
+    </div>
     <div class="chat-input-area">
       <textarea class="chat-input" id="chat-input" placeholder="로제에게 이야기하세요..." rows="1" onkeydown="chatKeydown(event)" oninput="autoResize(this)"></textarea>
       <button class="chat-send" onclick="sendChat()">✦</button>
@@ -1114,7 +1157,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   <div id="screen-deck" class="screen">
     <div class="deck-bg"><img src="https://i.imgur.com/Gn0bpBK.jpeg" alt=""></div>
     <div class="app-bar">
+      <button class="back-btn" onclick="goBack()">❮</button>
       <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">MAJOR ARCANA</span>
+      <div style="width:36px"></div>
     </div>
     <div class="scroll-body">
       <div style="padding:12px 14px 4px;position:relative;z-index:1">
@@ -1128,7 +1173,9 @@ body.on-home #bottom-nav .nav-btn.active .nl{ color:var(--gold); }
   <div id="screen-settings" class="screen">
     <div class="settings-bg"><img src="https://i.imgur.com/Gn0bpBK.jpeg" alt=""></div>
     <div class="app-bar">
+      <button class="back-btn" onclick="goBack()">❮</button>
       <span style="font-family:EB Garamond,serif;font-style:italic;font-size:13px;letter-spacing:.12em;color:rgba(200,184,130,.8)">SETTINGS</span>
+      <div style="width:36px"></div>
     </div>
     <div class="scroll-body">
       <div class="settings-inner">
@@ -1398,10 +1445,88 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 function buildSparkles(){
   const c = document.getElementById('sparkles');
-  for(let i=0;i<40;i++){
+  const W = window.innerWidth;
+  // 가장자리 스트립 너비: 화면의 14%
+  const strip = 14;
+  const golds = [
+    'rgba(255,245,200,.95)','rgba(240,220,160,.9)',
+    'rgba(220,196,130,.85)','rgba(255,255,220,.9)'
+  ];
+
+  // 스파클 배치 — 3개 구역으로 분리
+  // A: 로고 주변 (y 35~52%, x 전체)
+  // B: 버튼 좌측 여백 (y 58~78%, x 0~18%)
+  // C: 버튼 우측 여백 (y 58~78%, x 82~100%)
+  function rndPos(zone){
+    if(zone==='logo'){
+      const angle = Math.random()*Math.PI*2;
+      const rx = 36 + Math.random()*8;
+      const ry = 9 + Math.random()*5;
+      const x = 50 + Math.cos(angle)*rx*(0.4+Math.random()*0.6);
+      const y = 42 + Math.sin(angle)*ry*(0.4+Math.random()*0.6);
+      return {x:Math.max(1,Math.min(99,x)), y:Math.max(30,Math.min(55,y))};
+    } else {
+      // 태그라인 "당신의 운명을 읽는 시간" 근처 (y 52~63%, 좌우)
+      const x = zone==='btnL' ? 1+Math.random()*22 : 77+Math.random()*22;
+      const y = 52 + Math.random()*12;
+      return {x, y};
+    }
+  }
+
+  // ① 원형 점 — 50개 (로고30 + 버튼좌10 + 버튼우10)
+  for(let i=0;i<50;i++){
     const s=document.createElement('div');
     s.className='sp';
-    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${3+Math.random()*6}s;--dl:${Math.random()*7}s`;
+    const sz = 1 + Math.random()*1.8;
+    const zone = i<30?'logo':i<40?'btnL':'btnR';
+    const {x,y} = rndPos(zone);
+    const col = golds[Math.floor(Math.random()*golds.length)];
+    s.style.cssText = [
+      `left:${x}%`,`top:${y}%`,
+      `width:${sz}px`,`height:${sz}px`,
+      `background:${col}`,
+      `box-shadow:0 0 ${sz*2}px ${col}`,
+      `--d:${3+Math.random()*6}s`,
+      `--dl:${Math.random()*10}s`,
+      `--op:${0.6+Math.random()*0.4}`
+    ].join(';');
+    c.appendChild(s);
+  }
+
+  // ② 십자 — 20개 (로고12 + 버튼좌4 + 버튼우4)
+  for(let i=0;i<20;i++){
+    const s=document.createElement('div');
+    s.className='sp-cross';
+    const sz = 2.5 + Math.random()*4;
+    const zone = i<12?'logo':i<16?'btnL':'btnR';
+    const {x,y} = rndPos(zone);
+    const col = golds[Math.floor(Math.random()*golds.length)];
+    s.style.cssText = [
+      `left:${x}%`,`top:${y}%`,
+      `--sz:${sz}px`,`--sc:${col}`,
+      `--d:${4+Math.random()*5}s`,
+      `--dl:${Math.random()*11}s`,
+      `--op:${0.75+Math.random()*0.25}`
+    ].join(';');
+    c.appendChild(s);
+  }
+
+  // ③ 다이아 — 10개 (로고6 + 버튼좌2 + 버튼우2)
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div');
+    s.className='sp-dia';
+    const sz = 2 + Math.random()*3;
+    const zone = i<6?'logo':i<8?'btnL':'btnR';
+    const {x,y} = rndPos(zone);
+    const col = golds[Math.floor(Math.random()*golds.length)];
+    s.style.cssText = [
+      `left:${x}%`,`top:${y}%`,
+      `width:${sz}px`,`height:${sz}px`,
+      `background:${col}`,
+      `--d:${4+Math.random()*5}s`,
+      `--dl:${Math.random()*9}s`,
+      `--op:${0.6+Math.random()*0.4}`
+    ].join(';');
     c.appendChild(s);
   }
 }
@@ -1563,6 +1688,8 @@ function showScreen(id, pushHistory=true){
   // 홈일 때 body 클래스로 네비 투명 처리
   if(id==='home') document.body.classList.add('on-home');
   else document.body.classList.remove('on-home');
+  // chat-fan-modal 혹시 열려있으면 닫기
+  document.getElementById('chat-fan-modal').classList.remove('open');
   if(id==='chat') { if(chatHistory.length===0) setTimeout(initChat,50); }
   if(id==='today') { todaySelected=false; setTimeout(initTodayFan, 80); }
   if(id==='celtic') {
@@ -1700,34 +1827,44 @@ function initTodayFan(){
     el.style.transform = `rotate(${tilt}deg)`;
     el.style.setProperty('--tilt', tilt + 'deg');
     el.style.zIndex = i;
+    el.dataset.idx = i;
     el.onclick = () => pickTodayFanCard(card, el);
     inner.appendChild(el);
   });
 }
 
 function pickTodayFanCard(card, el){
-  if(todaySelected) return;
   todayCard = card;
   todaySelected = true;
 
-  // 선택된 카드 강조 — 위로 띄우기
+  // 이전 선택 초기화
+  document.querySelectorAll('.fan-card').forEach(fc => {
+    fc.classList.remove('picked');
+    fc.style.opacity = '1';
+    fc.style.transform = `rotate(${fc.style.getPropertyValue('--tilt') || '0deg'})`;
+    fc.style.boxShadow = '';
+    fc.style.borderColor = '';
+    fc.style.zIndex = fc.dataset.idx || '1';
+  });
+
+  // 선택된 카드 강조
   el.classList.add('picked');
   el.style.borderColor = 'var(--gold)';
-  el.style.transform = 'translateY(-36px) scale(1.12) rotate(0deg)';
+  el.style.transform = 'translateY(-20px) scale(1.08) rotate(0deg)';
   el.style.boxShadow = '0 20px 40px rgba(0,0,0,.7), 0 0 30px rgba(200,184,130,.6)';
   el.style.zIndex = 50;
   el.style.transition = 'all .4s cubic-bezier(.2,0,.2,1)';
 
   // 나머지 카드 흐리게
   document.querySelectorAll('.fan-card').forEach(fc => {
-    if(fc !== el) { fc.style.opacity = '0.15'; fc.style.transition = 'opacity .4s'; }
+    if(fc !== el) { fc.style.opacity = '0.2'; fc.style.transition = 'opacity .4s'; }
   });
 
-  // 안내 문구 변경 → 사용자가 확인 버튼 누를 때까지 대기
+  // 안내 문구
   const instr = document.getElementById('today-instruction');
   if(instr) { instr.style.display = 'block'; instr.textContent = '카드를 확인할 준비가 되면 아래 버튼을 눌러주세요'; }
 
-  // "카드 열기" 버튼 표시
+  // "카드 열기" 버튼
   const confirmBtn = document.getElementById('today-confirm-btn');
   if(confirmBtn) confirmBtn.style.display = 'block';
 }
@@ -1788,6 +1925,7 @@ function renderTodayMeaning(){
     <div class="cm-keywords">${c.keywords.map(k=>`<span class="kw">${k}</span>`).join('')}</div>`;
   box.classList.add('show');
   document.getElementById('today-save-area').classList.add('show');
+  const kw = document.getElementById('today-kakao-wrap'); if(kw) kw.style.display='block';
 }
 
 function resetToday(){
@@ -1976,7 +2114,8 @@ function showThreeResult(){
   }
 
   html += '<div style="height:10px"></div>'
-    + '<button class="btn-ghost w-full" onclick="saveThreeImage()">🖼 이미지로 저장</button>';
+    + '<button class="btn-ghost w-full" onclick="saveThreeImage()">🖼 이미지로 저장</button>'
+    + '<button class="btn-kakao" style="width:100%;margin-top:8px" onclick="openChannelTalk()"><span style="font-size:16px">💬</span> 로제와 직접 소통하기</button>';
 
   result.innerHTML = html;
   result.classList.add('show');
@@ -2003,23 +2142,35 @@ async function saveThreeImage(){
   THREE_POSITIONS.forEach((pos,i)=>{
     const c = threeCards[i];
     if(!c) return;
-    rows += `<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(200,184,130,.15)">
-      <span style="font-size:26px">${c.sym}</span>
-      <div>
-        <div style="font-family:Cinzel,serif;font-size:10px;letter-spacing:.15em;color:#c8b882;text-transform:uppercase">${pos.label}</div>
-        <div style="font-family:Cinzel,serif;font-size:13px;color:#e8dfc4">${c.name}</div>
+    rows += `<div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(200,184,130,.12)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:24px">${c.sym}</span>
+        <div>
+          <div style="font-family:Cinzel,serif;font-size:9px;letter-spacing:.15em;color:#c8b882;text-transform:uppercase">${pos.label}</div>
+          <div style="font-family:Cinzel,serif;font-size:13px;color:#e8dfc4">${c.name}</div>
+        </div>
       </div>
+      <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:13px;color:#f5f0e8;line-height:1.75;margin:0">${c.meaning}</p>
     </div>`;
   });
 
+  // 로제 한마디 (질문 있을 때)
+  const adviceCard = threeCards[2] || threeCards[1] || threeCards[0];
+  const rozeAdviceBlock = (userQuestion && adviceCard && adviceCard.advice)
+    ? `<div style="margin-top:4px;padding:12px 14px;border-left:2px solid rgba(200,150,150,.6);background:rgba(200,150,150,.07)">
+        <div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:.18em;color:rgba(200,150,150,.85);text-transform:uppercase;margin-bottom:6px">✦ 로제의 한마디 ✦</div>
+        <p style="font-family:'EB Garamond',serif;font-style:italic;font-size:13px;color:#f0e8d0;line-height:1.7;margin:0">${adviceCard.advice}</p>
+        <p style="font-size:11px;color:rgba(200,184,130,.45);margin-top:6px;font-style:italic">“${userQuestion}”</p>
+      </div>`
+    : '';
+
   frame.innerHTML = `
-    <div style="text-align:center;margin-bottom:20px">
-      
-    </div>
-    <div style="text-align:center;font-family:Cinzel Decorative,serif;font-size:16px;color:#f0e8d0;margin-bottom:16px">상황 심층분석 · 3장 배열</div>
+    <div style="text-align:center;font-family:'Cinzel Decorative',serif;font-size:16px;color:#f0e8d0;margin-bottom:16px">상황 심층분석 · 3장 배열</div>
+    ${userQuestion ? `<div style="text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(200,184,130,.7);margin-bottom:16px">“${userQuestion}”</div>` : ''}
     <div style="height:1px;background:linear-gradient(90deg,transparent,#c8b882,transparent);margin-bottom:20px"></div>
     ${rows}
-    <div style="text-align:center;margin-top:16px;font-family:Cinzel,serif;font-size:9px;letter-spacing:.2em;color:rgba(200,184,130,.5)">ROZE TAROT · ${new Date().toLocaleDateString('ko-KR')}</div>`;
+    ${rozeAdviceBlock}
+    <div style="text-align:center;margin-top:20px;font-family:Cinzel,serif;font-size:9px;letter-spacing:.2em;color:rgba(200,184,130,.5)">ROZE TAROT · ${new Date().toLocaleDateString('ko-KR')}</div>`;
 
   try{
     const canvas = await html2canvas(frame, {backgroundColor:'#1a0f2e', scale:2, useCORS:true, logging:false});
@@ -2518,16 +2669,22 @@ async function saveAsImage(type){
       <div style="text-align:center;margin-bottom:24px">
         
       </div>
-      <div style="text-align:center;font-family:Cinzel Decorative,serif;font-size:18px;color:#f0e8d0;margin-bottom:8px">오늘의 카드</div>
+      <div style="text-align:center;font-family:'Cinzel Decorative',serif;font-size:18px;color:#f0e8d0;margin-bottom:8px">오늘의 카드</div>
       <div style="height:1px;background:linear-gradient(90deg,transparent,#c8b882,transparent);margin:12px 0"></div>
       <div style="text-align:center;font-size:56px;margin:20px 0">${c.sym}</div>
-      <div style="text-align:center;font-family:Cinzel Decorative,serif;font-size:20px;color:#f0e8d0;margin-bottom:6px">${c.name}</div>
+      <div style="text-align:center;font-family:'Cinzel Decorative',serif;font-size:20px;color:#f0e8d0;margin-bottom:6px">${c.name}</div>
       <div style="text-align:center;font-family:Cinzel,serif;font-size:10px;letter-spacing:.2em;color:#c8b882;text-transform:uppercase;margin-bottom:16px">Arcana ${c.num} · ${c.en}</div>
       <div style="height:1px;background:linear-gradient(90deg,transparent,#c8b882,transparent);margin:12px 0"></div>
-      <p style="font-style:italic;font-size:15px;color:#f5f0e8;text-align:center;line-height:1.8">${c.meaning}</p>
+      ${ynMode==='yesno' ? (() => {
+        const yn = c.yn;
+        const ynColor = yn==='YES' ? '#a8d8a8' : yn==='NO' ? '#d8a8a8' : '#c8b882';
+        return `<div style="text-align:center;font-family:Cinzel,serif;font-size:26px;font-weight:700;color:${ynColor};letter-spacing:.2em;margin:10px 0">${yn}</div>
+        <p style="font-style:italic;font-size:14px;color:#f5f0e8;text-align:center;line-height:1.8;margin-top:8px">${c.ynMeaning||c.meaning}</p>`;
+      })() : `<p style="font-style:italic;font-size:15px;color:#f5f0e8;text-align:center;line-height:1.8">${c.meaning}</p>`}
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:16px">
         ${c.keywords.map(k=>`<span style="font-family:Cinzel,serif;font-size:9px;letter-spacing:.1em;color:#c8b882;border:1px solid rgba(200,184,130,.4);padding:4px 10px;border-radius:20px">${k}</span>`).join('')}
       </div>
+      ${c.advice ? `<div style="margin-top:18px;padding:14px 16px;border-left:2px solid rgba(200,184,130,.5);background:rgba(200,184,130,.07)"><div style="font-family:Cinzel,serif;font-size:8px;letter-spacing:.18em;color:rgba(200,184,130,.7);text-transform:uppercase;margin-bottom:6px">ADVICE</div><p style="font-style:italic;font-size:13px;color:#e8dfc4;line-height:1.7">${c.advice}</p></div>` : ''}
       <div style="text-align:center;margin-top:24px;font-family:Cinzel,serif;font-size:9px;letter-spacing:.2em;color:rgba(200,184,130,.5)">ROZE TAROT · ${new Date().toLocaleDateString('ko-KR')}</div>`;
     target=frame;
   } else {
@@ -2555,5 +2712,105 @@ function clearHistory(){
   }
 }
 </script>
+
+<script>
+(function(){
+  var w=window;if(w.ChannelIO){return;}
+  var ch=function(){ch.c(arguments)};
+  ch.q=[];ch.c=function(args){ch.q.push(args)};
+  w.ChannelIO=ch;
+  function l(){
+    if(w.ChannelIOInitialized){return;}
+    w.ChannelIOInitialized=true;
+    var s=document.createElement("script");
+    s.type="text/javascript";s.async=true;
+    s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";
+    var x=document.getElementsByTagName("script")[0];
+    x.parentNode.insertBefore(s,x);
+  }
+  if(document.readyState==="complete"){l();}
+  else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}
+}());
+ChannelIO('boot',{
+  pluginKey:'b3ea9ad5-5048-44b7-b3ad-7ae775078636',
+  hideChannelButtonOnBoot:true
+});
+function openChannelTalk(){openPaymentModal();}
+function openPaymentModal(){
+  const modal = document.getElementById('payment-modal');
+  modal.style.display = 'flex';
+}
+function closePaymentModal(){
+  document.getElementById('payment-modal').style.display = 'none';
+}
+
+function connectToRealRoze(){
+  closePaymentModal();
+  // 대화 요약 생성
+  const summary = chatHistory
+    .slice(-12) // 최근 12턴
+    .map(m => (m.role==='user' ? '[나] ' : '[로제] ') + m.content.replace(/<[^>]+>/g,'').substring(0,120))
+    .join('\n');
+
+  // 채널톡에 대화 맥락 전달 후 오픈
+  ChannelIO('updateUser', {
+    profile: {
+      name: '로제 타로 상담 요청',
+      mobileNumber: undefined,
+    },
+    pluginKey: 'b3ea9ad5-5048-44b7-b3ad-7ae775078636'
+  });
+
+  // 채널톡 열면서 자동 메시지로 대화 요약 전송
+  ChannelIO('show');
+  setTimeout(()=>{
+    if(summary.trim()){
+      ChannelIO('openChat', {
+        message: '📋 AI 로제와의 대화 요약:\n\n' + summary + '\n\n---\n실제 상담을 요청드립니다.'
+      });
+    }
+  }, 800);
+}
+
+</script>
+
+<!-- ══ 실제 상담 결제 모달 ══ -->
+<div id="payment-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(10,5,20,.92);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:340px;background:linear-gradient(160deg,#2d1b4e,#1a0f2e);border:1px solid rgba(200,184,130,.3);border-radius:12px;padding:28px 24px;position:relative">
+    <!-- 닫기 -->
+    <button onclick="closePaymentModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(200,184,130,.6);font-size:18px;cursor:pointer">✕</button>
+    <!-- 헤더 -->
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:32px;margin-bottom:8px">🌹</div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;letter-spacing:.18em;color:var(--plat-shine)">ROZE 1:1 실제 상담</div>
+    </div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(200,184,130,.4),transparent);margin-bottom:20px"></div>
+    <!-- 안내 -->
+    <div style="font-family:'EB Garamond',serif;font-style:italic;font-size:15px;color:var(--cream);line-height:1.8;text-align:center;margin-bottom:20px">
+      AI 로제가 아닌 <span style="color:var(--gold)">실제 타로마스터 로제</span>와<br>직접 1:1로 깊이 있는 상담을 받으실 수 있습니다.
+    </div>
+    <!-- 요금 -->
+    <div style="background:rgba(200,184,130,.08);border:1px solid rgba(200,184,130,.2);border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.12em;color:var(--platinum)">기본 상담</span>
+        <span style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">₩15,000</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:.12em;color:var(--platinum)">심층 상담 (30분)</span>
+        <span style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold)">₩30,000</span>
+      </div>
+      <div style="height:1px;background:rgba(200,184,130,.15);margin:10px 0"></div>
+      <div style="font-family:'EB Garamond',serif;font-size:12px;color:rgba(200,184,130,.6);font-style:italic;text-align:center">채널톡 연결 후 상담사와 결제 방식 협의</div>
+    </div>
+    <!-- AI 대화 요약 전달 안내 -->
+    <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:20px;padding:10px 12px;background:rgba(200,184,130,.06);border-radius:6px">
+      <span style="font-size:14px;flex-shrink:0">✦</span>
+      <span style="font-family:'EB Garamond',serif;font-size:13px;color:rgba(200,184,130,.8);line-height:1.6">지금까지 AI 로제와 나눈 대화 내용이 상담사에게 자동으로 전달되어 처음부터 다시 설명하지 않아도 됩니다.</span>
+    </div>
+    <!-- 버튼 -->
+    <button onclick="connectToRealRoze()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--plat-shine),var(--gold));border:none;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;color:var(--pur-deep);cursor:pointer;font-weight:600">실제 로제와 연결하기 →</button>
+    <button onclick="closePaymentModal()" style="width:100%;padding:10px;background:none;border:none;font-family:'EB Garamond',serif;font-style:italic;font-size:13px;color:rgba(200,184,130,.5);cursor:pointer;margin-top:8px">AI 로제와 계속 대화하기</button>
+  </div>
+</div>
 </body>
 </html>
