@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roze Tarot · 운영자 패널</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f0818;--panel:#1a0f2e;--panel2:#2d1b4e;--gold:#c8b882;--cream:#f5f0e8;--green:#a8d8a8;--red:#d8a8a8;--border:rgba(200,184,130,.2)}
+body{background:var(--bg);color:var(--cream);font-family:'EB Garamond',serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+#login-screen{flex:1;display:flex;align-items:center;justify-content:center}
+.login-box{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:40px 36px;width:100%;max-width:360px;text-align:center}
+.login-title{font-family:'Cinzel',serif;font-size:16px;letter-spacing:.2em;color:var(--gold);margin-bottom:8px}
+.login-sub{font-style:italic;font-size:14px;color:rgba(200,184,130,.6);margin-bottom:28px}
+.login-input{width:100%;padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--cream);font-family:'EB Garamond',serif;font-size:15px;margin-bottom:12px}
+.login-input:focus{outline:none;border-color:var(--gold)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#e8dfc4,var(--gold));border:none;border-radius:6px;font-family:'Cinzel',serif;font-size:11px;letter-spacing:.18em;color:#1a0f2e;cursor:pointer;font-weight:600}
+.login-err{color:#d8a8a8;font-size:13px;margin-top:10px;font-style:italic;min-height:20px}
+#admin-screen{flex:1;display:none;flex-direction:column;overflow:hidden}
+#top-bar{padding:10px 20px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.top-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:.2em;color:var(--gold)}
+.logout-btn{padding:5px 14px;background:none;border:1px solid var(--border);border-radius:4px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.12em;color:rgba(200,184,130,.6);cursor:pointer}
+#main-layout{flex:1;display:flex;overflow:hidden}
+#session-list{width:260px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar-header{padding:14px 16px;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:10px;letter-spacing:.18em;color:var(--gold);display:flex;align-items:center;justify-content:space-between}
+.badge-count{background:rgba(200,184,130,.2);border:1px solid rgba(200,184,130,.3);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--gold)}
+.session-items{flex:1;overflow-y:auto}
+.session-item{padding:12px 16px;border-bottom:1px solid rgba(200,184,130,.07);cursor:pointer;transition:background .15s;position:relative}
+.session-item:hover{background:rgba(200,184,130,.06)}
+.session-item.sel{background:rgba(200,184,130,.11);border-left:3px solid var(--gold)}
+.s-id{font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:rgba(200,184,130,.6);margin-bottom:3px}
+.s-status{font-size:12px;font-style:italic;margin-bottom:2px}
+.s-time{font-size:10px;color:rgba(200,184,130,.35)}
+.no-sess{padding:28px 16px;text-align:center;color:rgba(200,184,130,.35);font-style:italic;font-size:13px}
+#chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(200,184,130,.3)}
+.empty-icon{font-size:44px;margin-bottom:14px;opacity:.4}
+.empty-txt{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em}
+#active-chat{display:none;flex-direction:column;flex:1;overflow:hidden}
+.chat-header{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel);flex-shrink:0}
+.chat-htitle{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.15em;color:var(--gold)}
+.chat-hsub{font-size:12px;font-style:italic;color:rgba(200,184,130,.5);margin-top:2px}
+.btn-end{padding:6px 14px;background:rgba(216,168,168,.12);border:1px solid rgba(216,168,168,.3);border-radius:4px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:.1em;color:#d8a8a8;cursor:pointer}
+.btn-end:hover{background:rgba(216,168,168,.22)}
+#ai-summary-box{margin:10px 14px;padding:12px 14px;background:rgba(200,184,130,.06);border:1px solid rgba(200,184,130,.14);border-radius:6px;flex-shrink:0;display:none}
+.sum-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.18em;color:rgba(200,184,130,.55);text-transform:uppercase;margin-bottom:6px}
+.sum-text{font-size:12px;font-style:italic;color:rgba(200,184,130,.75);line-height:1.65;max-height:100px;overflow-y:auto;white-space:pre-wrap}
+#messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
+.mrow{display:flex;gap:8px;max-width:88%}
+.mrow.user{align-self:flex-end;flex-direction:row-reverse}
+.mrow.admin{align-self:flex-start}
+.mavatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;align-self:flex-end}
+.mrow.user .mavatar{background:rgba(200,184,130,.15);border:1px solid rgba(200,184,130,.25)}
+.mrow.admin .mavatar{background:linear-gradient(135deg,#4a2a70,#2d1b4e);border:1px solid rgba(200,184,130,.2)}
+.mbubble{padding:9px 13px;border-radius:10px;font-size:15px;line-height:1.7;word-break:break-word}
+.mrow.user .mbubble{background:rgba(200,184,130,.1);border:1px solid rgba(200,184,130,.18);border-bottom-right-radius:2px}
+.mrow.admin .mbubble{background:linear-gradient(145deg,rgba(61,36,104,.8),rgba(45,27,78,.9));border:1px solid rgba(200,184,130,.14);border-bottom-left-radius:2px}
+.mtime{font-size:10px;color:rgba(200,184,130,.3);margin-top:3px}
+.mname{font-family:'Cinzel',serif;font-size:8px;letter-spacing:.1em;color:rgba(200,184,130,.45);margin-bottom:2px}
+#input-area{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end;flex-shrink:0;background:var(--panel)}
+#admin-input{flex:1;padding:10px 13px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--cream);font-family:'EB Garamond',serif;font-size:15px;resize:none;max-height:110px;line-height:1.6}
+#admin-input:focus{outline:none;border-color:var(--gold)}
+#send-btn{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#e8dfc4,var(--gold));border:none;cursor:pointer;font-size:17px;flex-shrink:0;color:#1a0f2e;transition:transform .15s}
+#send-btn:active{transform:scale(.9)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot.waiting{background:var(--gold)}
+.dot.active{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.closed{background:rgba(200,184,130,.3)}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:38px;margin-bottom:14px">🌹</div>
+    <div class="login-title">ROZE TAROT</div>
+    <div class="login-sub">운영자 전용 패널</div>
+    <input class="login-input" type="email" id="login-email" placeholder="운영자 이메일">
+    <input class="login-input" type="password" id="login-pw" placeholder="비밀번호"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div id="admin-screen">
+  <div id="top-bar">
+    <span class="top-title">🌹 ROZE TAROT · 운영자 패널</span>
+    <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+  </div>
+  <div id="main-layout">
+    <div id="session-list">
+      <div class="sidebar-header">
+        <span>상담 목록</span>
+        <span class="badge-count" id="waiting-count">0</span>
+      </div>
+      <div class="session-items" id="session-items">
+        <div class="no-sess">대기 중인 상담이 없습니다</div>
+      </div>
+    </div>
+    <div id="chat-area">
+      <div id="empty-state">
+        <div class="empty-icon">🌹</div>
+        <div class="empty-txt">상담을 선택해주세요</div>
+      </div>
+      <div id="active-chat">
+        <div class="chat-header">
+          <div>
+            <div class="chat-htitle" id="chat-title">-</div>
+            <div class="chat-hsub" id="chat-sub">-</div>
+          </div>
+          <button class="btn-end" onclick="closeConsultation()">상담 종료</button>
+        </div>
+        <div id="ai-summary-box">
+          <div class="sum-title">✦ AI 로제 대화 요약</div>
+          <div class="sum-text" id="sum-text"></div>
+        </div>
+        <div id="messages"></div>
+        <div id="input-area">
+          <textarea id="admin-input" rows="2" placeholder="타로마스터 로제로서 답변 입력... (Enter 전송 / Shift+Enter 줄바꿈)"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminMsg()}"></textarea>
+          <button id="send-btn" onclick="sendAdminMsg()">✦</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCj_sY70D9VtTXD13a69ttv73D96nGPPSA",
+  authDomain:"roze-tarot.firebaseapp.com",
+  databaseURL:"https://roze-tarot-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"roze-tarot"
+});
+const db = firebase.database();
+const auth = firebase.auth();
+
+let curId = null;
+let msgRef = null;
+
+// ── 로그인
+function doLogin(){
+  const e = document.getElementById('login-email').value.trim();
+  const p = document.getElementById('login-pw').value;
+  document.getElementById('login-err').textContent = '';
+  auth.signInWithEmailAndPassword(e,p)
+    .then(()=>showAdmin())
+    .catch(err=>{ document.getElementById('login-err').textContent = '로그인 실패: ' + err.message; });
+}
+function doLogout(){ auth.signOut().then(()=>location.reload()); }
+auth.onAuthStateChanged(u=>{ if(u) showAdmin(); });
+
+function showAdmin(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display = 'flex';
+  listenSessions();
+}
+
+// ── 세션 목록
+function listenSessions(){
+  db.ref('consultations').on('value', snap=>{
+    const data = snap.val();
+    const items = document.getElementById('session-items');
+    if(!data){ items.innerHTML='<div class="no-sess">대기 중인 상담이 없습니다</div>'; return; }
+    const list = Object.entries(data).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+    let waiting = 0;
+    items.innerHTML = '';
+    list.forEach(([id,s])=>{
+      if(s.status==='waiting'||s.status==='active') waiting++;
+      const d = document.createElement('div');
+      d.className = 'session-item'+(id===curId?' sel':'');
+      d.onclick = ()=>openSession(id,s);
+      const t = new Date(s.createdAt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      const dot = s.status==='active'?'active':s.status==='closed'?'closed':'waiting';
+      const lbl = s.status==='active'?'상담 중':s.status==='closed'?'종료':'대기 중';
+      d.innerHTML = `<div class="s-id">#${id.replace('session_','')}</div>
+        <div class="s-status"><span class="dot ${dot}"></span>${lbl}</div>
+        <div class="s-time">${t}</div>`;
+      items.appendChild(d);
+    });
+    document.getElementById('waiting-count').textContent = waiting;
+  });
+}
+
+// ── 세션 열기
+function openSession(id, s){
+  curId = id;
+  if(s.status==='waiting') db.ref('consultations/'+id+'/status').set('active');
+  document.getElementById('empty-state').style.display='none';
+  document.getElementById('active-chat').style.display='flex';
+  document.getElementById('chat-title').textContent = '상담 #' + id.replace('session_','');
+  document.getElementById('chat-sub').textContent = new Date(s.createdAt).toLocaleString('ko-KR');
+  const sumBox = document.getElementById('ai-summary-box');
+  if(s.aiSummary){ sumBox.style.display='block'; document.getElementById('sum-text').textContent=s.aiSummary; }
+  else sumBox.style.display='none';
+  // 메시지
+  if(msgRef) msgRef.off();
+  document.getElementById('messages').innerHTML='';
+  msgRef = db.ref('consultations/'+id+'/messages');
+  msgRef.on('child_added', snap=>{ const m=snap.val(); if(m) renderMsg(m.role,m.content,m.timestamp); });
+}
+
+function renderMsg(role, content, ts){
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  const isUser = role==='user';
+  d.className = 'mrow '+(isUser?'user':'admin');
+  const t = ts?new Date(ts).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+  d.innerHTML = `<div class="mavatar">${isUser?'✨':'🌹'}</div>
+    <div>
+      <div class="mname">${isUser?'사용자':'타로마스터 로제'}</div>
+      <div class="mbubble">${content.replace(/\n/g,'<br>')}</div>
+      <div class="mtime">${t}</div>
+    </div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendAdminMsg(){
+  const inp = document.getElementById('admin-input');
+  const txt = inp.value.trim();
+  if(!txt||!curId) return;
+  inp.value=''; inp.style.height='';
+  db.ref('consultations/'+curId+'/messages').push({role:'admin',content:txt,timestamp:Date.now()});
+}
+
+function closeConsultation(){
+  if(!curId||!confirm('상담을 종료하시겠습니까?')) return;
+  db.ref('consultations/'+curId+'/messages').push({role:'admin',content:'상담이 종료되었습니다. 로제 타로를 이용해 주셔서 감사합니다. 🌹',timestamp:Date.now()});
+  db.ref('consultations/'+curId+'/status').set('closed');
+  curId=null;
+  document.getElementById('active-chat').style.display='none';
+  document.getElementById('empty-state').style.display='flex';
+}
+</script>
+</body>
+</html>
